@@ -8,16 +8,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        /* Inline overrides for the callback page */
-        body { display: flex; flex-direction: column; min-height: 100vh; justify-content: center; }
-        .status-icon { font-size: 4rem; margin-bottom: 20px; }
-        .success { color: var(--primary); text-shadow: 0 0 30px var(--primary-glow); }
-        .error { color: #ef4444; text-shadow: 0 0 30px rgba(239, 68, 68, 0.3); }
-        .center-panel { max-width: 500px; margin: 0 auto; text-align: center; }
+        /* Forces the body to fill the screen so centering works */
+        body, html { height: 100%; margin: 0; overflow: hidden; }
+        
+        .status-icon { font-size: 3.5rem; margin-bottom: 20px; }
+        .success { color: var(--primary); text-shadow: 0 0 25px var(--primary-glow); }
+        .error { color: #ef4444; text-shadow: 0 0 25px rgba(239, 68, 68, 0.3); }
+        
+        /* Ensures text inside the box is centered */
+        .center-panel { 
+            width: 100%; 
+            max-width: 480px; 
+            text-align: center; 
+            padding: 40px;
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar" style="position: absolute; top: 0;">
+    <nav class="navbar" style="position: absolute; top: 0; width: 100%;">
         <div class="nav-container" style="justify-content: center;">
             <a href="#" class="logo-group">
                 <img src="https://cdn.discordapp.com/icons/1305511241577529354/a_3468496798f28b28a3d3fd68ceb62885.gif?size=1024" class="logo-img">
@@ -26,25 +34,26 @@
         </div>
     </nav>
 
-    <main class="main-content" style="padding-top: 0;">
+    <main class="main-content" style="padding: 0; height: 100vh; display: flex; align-items: center; justify-content: center;">
+        
         <div class="glass-panel center-panel">
             <div id="status-content">
-                <i class="fas fa-check-circle status-icon success"></i>
-                <h2 style="font-size: 2rem; margin-bottom: 10px;">Verification Successful</h2>
-                <p style="color: var(--text-muted); margin-bottom: 25px;">
-                    Thank you for subscribing! Your role is being assigned in Discord. You may now close this window.
+                <i class="fas fa-circle-check status-icon success"></i>
+                <h2 style="font-size: 1.8rem; margin-bottom: 10px;">Verification Successful</h2>
+                <p style="color: var(--text-muted); margin-bottom: 30px; line-height: 1.6;">
+                    You have successfully verified your subscription.<br>Your roles have been updated in Discord.
                 </p>
                 </div>
 
-            <a href="discord://-" onclick="window.close()" 
-               style="display: inline-block; background: rgba(255,255,255,0.05); border: 1px solid var(--border-light); color: var(--text-main); padding: 10px 25px; border-radius: 30px; text-decoration: none; font-weight: 600; transition: 0.3s; cursor: pointer;">
-                Close Window
+            <a href="discord://" onclick="window.close()" 
+               style="display: inline-block; background: rgba(255,255,255,0.05); border: 1px solid var(--border-light); color: var(--text-main); padding: 12px 30px; border-radius: 30px; text-decoration: none; font-weight: 600; transition: 0.3s; cursor: pointer;">
+                Return to Discord
             </a>
         </div>
     </main>
 
-    <footer style="margin-top: auto; border: none;">
-        <p>© 2025 Depths Saviors.</p>
+    <footer style="position: absolute; bottom: 0; width: 100%; border: none; padding: 20px;">
+        <p style="opacity: 0.5;">© 2025 Depths Saviors.</p>
     </footer>
 </body>
 </html>
