@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="How to set up the Depths Saviors Discord bot for your server.">
     <title>Setup Guide | Depths Saviors</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,13 +16,22 @@
                 <img src="https://cdn.discordapp.com/icons/1305511241577529354/a_3468496798f28b28a3d3fd68ceb62885.gif?size=1024" class="logo-img">
                 <span class="logo-text">Depths Saviors</span>
             </a>
+            
+            <button class="hamburger" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
             <div class="nav-links">
                 <a href="/" class="nav-link">Home</a>
                 <a href="/bot" class="nav-link active">Setup Guide</a>
                 <a href="https://discord.gg/deepsaviors" class="discord-btn" target="_blank">
                     <i class="fab fa-discord"></i> Server
                 </a>
-                <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
             </div>
         </div>
     </nav>
@@ -91,16 +101,29 @@
         </div>
         <p style="margin-top: 10px;">© 2025 Depths Saviors.</p>
     </footer>
-    
+
     <script>
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.body.setAttribute('data-theme', savedTheme);
+            updateIcon(savedTheme);
+        }
         function toggleTheme() {
             const body = document.body;
             const currentTheme = body.getAttribute('data-theme');
-            if (currentTheme === 'light') body.setAttribute('data-theme', 'dark');
-            else body.setAttribute('data-theme', 'light');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateIcon(newTheme);
         }
+        function updateIcon(theme) {
+            const icon = document.querySelector('.theme-toggle i');
+            if (icon) icon.className = theme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        function toggleMenu() {
+            document.querySelector('.nav-links').classList.toggle('active');
+        }
+        document.addEventListener('DOMContentLoaded', initTheme);
     </script>
 </body>
 </html>
-
-
