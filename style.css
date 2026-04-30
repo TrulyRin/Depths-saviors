@@ -4,14 +4,14 @@
 :root {
   /* Default: Deep Ocean / Cyan Theme */
   --bg-deep: #020617;
-  --bg-gradient: radial-gradient(circle at top center, #082f49 0%, #020617 70%);
+  --bg-gradient: radial-gradient(circle at top center, #063830 0%, #020617 70%);
   --bg-surface: rgba(15, 23, 42, 0.6);
-  --primary: #06b6d4;
-  --primary-glow: rgba(6, 182, 212, 0.3);
-  --secondary: #38bdf8;
+  --primary: #07ac93;
+  --primary-glow: rgba(7, 172, 147, 0.3);
+  --secondary: #087465;
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --border-light: rgba(6, 182, 212, 0.2);
+  --border-light: rgba(7, 172, 147, 0.2);
   --glass: blur(20px) saturate(200%);
   --radius: 24px;
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -21,14 +21,14 @@
 /* Light Mode Override */
 [data-theme="light"] {
   --bg-deep: #f8fafc;
-  --bg-gradient: radial-gradient(circle at top center, #e0f2fe 0%, #f8fafc 80%);
+  --bg-gradient: radial-gradient(circle at top center, #c4fcfd 0%, #f8fafc 80%);
   --bg-surface: rgba(255, 255, 255, 0.85);
-  --primary: #0284c7;
-  --primary-glow: rgba(2, 132, 199, 0.2);
-  --secondary: #0369a1;
+  --primary: #087465;
+  --primary-glow: rgba(8, 116, 101, 0.2);
+  --secondary: #076b5c;
   --text-main: #0f172a;
   --text-muted: #475569;
-  --border-light: rgba(2, 132, 199, 0.15);
+  --border-light: rgba(8, 116, 101, 0.15);
 }
 
 * {
@@ -213,8 +213,8 @@ body {
 
 .glass-panel:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 40px rgba(0, 240, 181, 0.15);
-  border-color: rgba(66, 255, 214, 0.3);
+  box-shadow: 0 10px 40px var(--primary-glow);
+  border-color: var(--primary);
 }
 
 /* Command Styling */
