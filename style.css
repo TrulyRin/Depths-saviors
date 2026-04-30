@@ -31,7 +31,11 @@
   --border-light: rgba(2, 132, 199, 0.15);
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
 body {
   font-family: var(--font-main);
@@ -42,7 +46,8 @@ body {
   transition: background 0.3s, color 0.3s;
   overflow-x: hidden;
   min-height: 100vh;
-  display: flex; flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 /* =========================================
@@ -50,8 +55,12 @@ body {
    ========================================= */
 .navbar {
   position: fixed;
-  top: 0; width: 100%; height: var(--nav-height);
-  display: flex; align-items: center; justify-content: center;
+  top: 0;
+  width: 100%;
+  height: var(--nav-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 1000;
   background: rgba(var(--bg-deep), 0.2);
   backdrop-filter: var(--glass);
@@ -60,67 +69,134 @@ body {
 }
 
 .nav-container {
-  width: 90%; max-width: 1200px;
-  display: flex; justify-content: space-between; align-items: center;
+  width: 90%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.logo-group { display: flex; align-items: center; gap: 12px; text-decoration: none; z-index: 1002; }
-.logo-img { 
-  height: 48px; width: 48px; object-fit: cover; 
-  border-radius: 50%; border: 2px solid var(--primary); 
+.logo-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  z-index: 1002;
+}
+
+.logo-img {
+  height: 48px;
+  width: 48px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
   box-shadow: 0 0 15px var(--primary-glow);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-.logo-img:hover { transform: scale(1.1) rotate(5deg); box-shadow: 0 0 25px var(--primary); }
-.logo-text { font-weight: 800; font-size: 1.3rem; color: var(--text-main); letter-spacing: -0.5px; }
+
+.logo-img:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 0 25px var(--primary);
+}
+
+.logo-text {
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: var(--text-main);
+  letter-spacing: -0.5px;
+}
 
 /* Desktop Nav Links */
-.nav-links { display: flex; gap: 1rem; align-items: center; }
-.nav-link { 
-  font-weight: 500; 
-  color: var(--text-muted); 
-  text-decoration: none; 
-  transition: all 0.3s ease; 
-  position: relative; 
+.nav-links {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.nav-link {
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  position: relative;
   padding: 8px 16px;
   border-radius: 12px;
 }
-.nav-link:hover { 
-  color: var(--text-main); 
+
+.nav-link:hover {
+  color: var(--text-main);
   background: rgba(255, 255, 255, 0.05);
 }
-.nav-link.active { 
-  color: var(--primary); 
+
+.nav-link.active {
+  color: var(--primary);
   background: var(--primary-glow);
   border: 1px solid var(--border-light);
-  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
 }
 
 .discord-btn {
-  background: #5865F2; color: white !important;
-  padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: 600;
-  display: flex; align-items: center; gap: 8px; text-decoration: none; transition: transform 0.2s;
+  background: #5865F2;
+  color: white !important;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: transform 0.2s;
 }
-.discord-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(88, 101, 242, 0.4); }
+
+.discord-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(88, 101, 242, 0.4);
+}
 
 .theme-toggle {
-  background: transparent; border: 1px solid var(--border-light);
-  color: var(--text-main); width: 36px; height: 36px; border-radius: 50%;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: 0.3s;
 }
-.theme-toggle:hover { background: var(--border-light); }
+
+.theme-toggle:hover {
+  background: var(--border-light);
+}
 
 
 /* =========================================
    3. Main Content & Utilities
    ========================================= */
-.main-content { 
-  padding-top: 140px; padding-bottom: 60px; flex: 1; 
-  width: 90%; max-width: 1000px; margin: 0 auto;
+.main-content {
+  padding-top: 140px;
+  padding-bottom: 60px;
+  flex: 1;
+  width: 90%;
+  max-width: 1000px;
+  margin: 0 auto;
   animation: fadeIn 0.8s ease-out;
 }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 /* Glass Cards */
 .glass-panel {
@@ -129,39 +205,89 @@ body {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-light);
   border-radius: var(--radius);
-  padding: 30px; margin-bottom: 25px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+  padding: 30px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
-.glass-panel:hover { transform: translateY(-5px); box-shadow: 0 10px 40px rgba(0,240,181,0.15); border-color: rgba(66,255,214,0.3); }
+
+.glass-panel:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 40px rgba(0, 240, 181, 0.15);
+  border-color: rgba(66, 255, 214, 0.3);
+}
 
 /* Command Styling */
-code.cmd { background: rgba(0,0,0,0.3); color: var(--primary); padding: 4px 8px; border-radius: 4px; font-family: monospace; }
-.cmd-box { background: rgba(0,0,0,0.2); border-left: 3px solid var(--primary); padding: 15px; border-radius: 6px; margin-top: 10px; }
-.cmd-box code { display: block; font-size: 1.1rem; color: var(--text-main); font-weight: 600; }
-.cmd-box span { display: block; font-size: 0.9rem; color: var(--text-muted); margin-top: 4px; }
+code.cmd {
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--primary);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.cmd-box {
+  background: rgba(0, 0, 0, 0.2);
+  border-left: 3px solid var(--primary);
+  padding: 15px;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+.cmd-box code {
+  display: block;
+  font-size: 1.1rem;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.cmd-box span {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
 
 /* Footer */
 footer {
-  text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.9rem;
-  border-top: 1px solid var(--border-light); margin-top: auto;
+  text-align: center;
+  padding: 30px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  border-top: 1px solid var(--border-light);
+  margin-top: auto;
 }
-footer a { color: var(--text-muted); margin: 0 10px; text-decoration: none; }
-footer a:hover { color: var(--primary); }
+
+footer a {
+  color: var(--text-muted);
+  margin: 0 10px;
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: var(--primary);
+}
 
 /* =========================================
    4. Mobile Responsive Styles
    ========================================= */
 @media (max-width: 768px) {
 
-  .nav-link { font-size: 1.2rem; }
-  
+  .nav-link {
+    font-size: 1.2rem;
+  }
+
   /* Fix vertical stacking for setup steps */
   .glass-panel[style*="display: flex"] {
     flex-direction: column;
     align-items: flex-start;
   }
-  
-  .main-content { padding-top: 110px; }
-  h1 { font-size: 2.8rem !important; }
+
+  .main-content {
+    padding-top: 110px;
+  }
+
+  h1 {
+    font-size: 2.8rem !important;
+  }
 }
