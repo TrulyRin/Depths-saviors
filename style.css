@@ -3,14 +3,14 @@
    ========================================= */
 :root {
   /* Default: Deep Ocean / Cyan Theme */
-  --bg-deep: #020617;
-  --bg-gradient: radial-gradient(circle at top center, #063830 0%, #020617 70%);
-  --bg-surface: rgba(15, 23, 42, 0.6);
+  --bg-deep: #021310;
+  --bg-gradient: radial-gradient(circle at top center, #083e35 0%, #021310 70%);
+  --bg-surface: rgba(2, 28, 24, 0.6);
   --primary: #07ac93;
   --primary-glow: rgba(7, 172, 147, 0.3);
   --secondary: #087465;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+  --text-main: #f0fdfa;
+  --text-muted: #a4c2bd;
   --border-light: rgba(7, 172, 147, 0.2);
   --glass: blur(20px) saturate(200%);
   --radius: 24px;
@@ -20,14 +20,14 @@
 
 /* Light Mode Override */
 [data-theme="light"] {
-  --bg-deep: #f8fafc;
-  --bg-gradient: radial-gradient(circle at top center, #c4fcfd 0%, #f8fafc 80%);
+  --bg-deep: #f0fdfa;
+  --bg-gradient: radial-gradient(circle at top center, #ccfbf1 0%, #f0fdfa 80%);
   --bg-surface: rgba(255, 255, 255, 0.85);
   --primary: #087465;
   --primary-glow: rgba(8, 116, 101, 0.2);
   --secondary: #076b5c;
-  --text-main: #0f172a;
-  --text-muted: #475569;
+  --text-main: #042f2e;
+  --text-muted: #115e59;
   --border-light: rgba(8, 116, 101, 0.15);
 }
 
