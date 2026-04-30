@@ -2,16 +2,16 @@
    1. Theme Variables & Reset
    ========================================= */
 :root {
-  /* Default: Custom Theme */
-  --bg-deep: #2A3A38;
-  --bg-gradient: radial-gradient(circle at top center, #508A80 0%, #2A3A38 60%);
-  --bg-surface: rgba(42, 58, 56, 0.6);
-  --primary: #4ed4b8;
-  --primary-glow: rgba(78, 212, 184, 0.3);
-  --secondary: #80B5A8;
+  /* Default: Emerald-Cyan Theme (matches logo) */
+  --bg-deep: #0A2E26;
+  --bg-gradient: radial-gradient(circle at top center, #0D6B58 0%, #0A2E26 60%);
+  --bg-surface: rgba(10, 46, 38, 0.65);
+  --primary: #00E5B0;
+  --primary-glow: rgba(0, 229, 176, 0.3);
+  --secondary: #5EECD5;
   --text-main: #FFFFFF;
-  --text-muted: #80B5A8;
-  --border-light: rgba(255, 255, 255, 0.1);
+  --text-muted: #7EC8B8;
+  --border-light: rgba(94, 236, 213, 0.12);
   --glass: blur(16px) saturate(180%);
   --radius: 24px;
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -20,15 +20,15 @@
 
 /* Light Mode Override */
 [data-theme="light"] {
-  --bg-deep: #f0f5f4;
-  --bg-gradient: radial-gradient(circle at top center, #ffffff 0%, #f0f5f4 70%);
-  --bg-surface: rgba(255, 255, 255, 0.7);
-  --primary: #4ed4b8;
-  --primary-glow: rgba(78, 212, 184, 0.25);
-  --secondary: #508A80;
-  --text-main: #2A3A38;
-  --text-muted: #508A80;
-  --border-light: rgba(42, 58, 56, 0.1);
+  --bg-deep: #EDF7F4;
+  --bg-gradient: radial-gradient(circle at top center, #ffffff 0%, #EDF7F4 70%);
+  --bg-surface: rgba(255, 255, 255, 0.75);
+  --primary: #00C99A;
+  --primary-glow: rgba(0, 201, 154, 0.2);
+  --secondary: #0D6B58;
+  --text-main: #0A2E26;
+  --text-muted: #0D6B58;
+  --border-light: rgba(10, 46, 38, 0.1);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
