@@ -3,16 +3,16 @@
    ========================================= */
 :root {
   /* Default: Emerald-Cyan Theme (matches logo) */
-  --bg-deep: #0A2E26;
-  --bg-gradient: radial-gradient(circle at top center, #0D6B58 0%, #0A2E26 60%);
-  --bg-surface: rgba(10, 46, 38, 0.65);
-  --primary: #00E5B0;
-  --primary-glow: rgba(0, 229, 176, 0.3);
-  --secondary: #5EECD5;
-  --text-main: #FFFFFF;
-  --text-muted: #7EC8B8;
-  --border-light: rgba(94, 236, 213, 0.12);
-  --glass: blur(16px) saturate(180%);
+  --bg-deep: #041410;
+  --bg-gradient: radial-gradient(circle at top center, #084033 0%, #041410 70%);
+  --bg-surface: rgba(8, 64, 51, 0.45);
+  --primary: #00F0B5;
+  --primary-glow: rgba(0, 240, 181, 0.4);
+  --secondary: #42FFD6;
+  --text-main: #F4FBF9;
+  --text-muted: #8ED0C1;
+  --border-light: rgba(66, 255, 214, 0.15);
+  --glass: blur(20px) saturate(200%);
   --radius: 24px;
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --nav-height: 80px;
@@ -20,15 +20,15 @@
 
 /* Light Mode Override */
 [data-theme="light"] {
-  --bg-deep: #EDF7F4;
-  --bg-gradient: radial-gradient(circle at top center, #ffffff 0%, #EDF7F4 70%);
-  --bg-surface: rgba(255, 255, 255, 0.75);
-  --primary: #00C99A;
-  --primary-glow: rgba(0, 201, 154, 0.2);
-  --secondary: #0D6B58;
-  --text-main: #0A2E26;
-  --text-muted: #0D6B58;
-  --border-light: rgba(10, 46, 38, 0.1);
+  --bg-deep: #F2F9F7;
+  --bg-gradient: radial-gradient(circle at top center, #FFFFFF 0%, #E8F4F0 80%);
+  --bg-surface: rgba(255, 255, 255, 0.85);
+  --primary: #00B288;
+  --primary-glow: rgba(0, 178, 136, 0.3);
+  --secondary: #0A5C4A;
+  --text-main: #061F18;
+  --text-muted: #117861;
+  --border-light: rgba(10, 92, 74, 0.15);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -98,22 +98,6 @@ body {
 }
 .theme-toggle:hover { background: var(--border-light); }
 
-/* Hamburger Menu Icon (Hidden on Desktop) */
-.hamburger {
-  display: none;
-  flex-direction: column;
-  gap: 6px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  z-index: 1002;
-}
-.hamburger span {
-  display: block; width: 25px; height: 2px;
-  background-color: var(--text-main);
-  border-radius: 2px;
-  transition: 0.3s;
-}
 
 /* =========================================
    3. Main Content & Utilities
@@ -134,9 +118,9 @@ body {
   border-radius: var(--radius);
   padding: 30px; margin-bottom: 25px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
-.glass-panel:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-color: rgba(255,255,255,0.15); }
+.glass-panel:hover { transform: translateY(-5px); box-shadow: 0 10px 40px rgba(0,240,181,0.15); border-color: rgba(66,255,214,0.3); }
 
 /* Command Styling */
 code.cmd { background: rgba(0,0,0,0.3); color: var(--primary); padding: 4px 8px; border-radius: 4px; font-family: monospace; }
@@ -156,24 +140,6 @@ footer a:hover { color: var(--primary); }
    4. Mobile Responsive Styles
    ========================================= */
 @media (max-width: 768px) {
-  .hamburger { display: flex; }
-
-  .nav-links {
-    position: fixed;
-    top: 0; right: -100%; /* Hidden by default */
-    width: 70%; height: 100vh;
-    background: var(--bg-deep);
-    border-left: 1px solid var(--border-light);
-    flex-direction: column;
-    justify-content: center;
-    transition: 0.4s ease;
-    backdrop-filter: blur(20px);
-    z-index: 1001;
-    box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-  }
-
-  /* When menu is active (JavaScript will add this class) */
-  .nav-links.active { right: 0; }
 
   .nav-link { font-size: 1.2rem; }
   
