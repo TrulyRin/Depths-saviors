@@ -2,16 +2,16 @@
    1. Theme Variables & Reset
    ========================================= */
 :root {
-  /* Default: Emerald-Cyan Theme (matches logo) */
-  --bg-deep: #041410;
-  --bg-gradient: radial-gradient(circle at top center, #084033 0%, #041410 70%);
-  --bg-surface: rgba(8, 64, 51, 0.45);
-  --primary: #00F0B5;
-  --primary-glow: rgba(0, 240, 181, 0.4);
-  --secondary: #42FFD6;
-  --text-main: #F4FBF9;
-  --text-muted: #8ED0C1;
-  --border-light: rgba(66, 255, 214, 0.15);
+  /* Default: Deep Ocean / Cyan Theme */
+  --bg-deep: #020617;
+  --bg-gradient: radial-gradient(circle at top center, #082f49 0%, #020617 70%);
+  --bg-surface: rgba(15, 23, 42, 0.6);
+  --primary: #06b6d4;
+  --primary-glow: rgba(6, 182, 212, 0.3);
+  --secondary: #38bdf8;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-light: rgba(6, 182, 212, 0.2);
   --glass: blur(20px) saturate(200%);
   --radius: 24px;
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -20,15 +20,15 @@
 
 /* Light Mode Override */
 [data-theme="light"] {
-  --bg-deep: #F2F9F7;
-  --bg-gradient: radial-gradient(circle at top center, #FFFFFF 0%, #E8F4F0 80%);
+  --bg-deep: #f8fafc;
+  --bg-gradient: radial-gradient(circle at top center, #e0f2fe 0%, #f8fafc 80%);
   --bg-surface: rgba(255, 255, 255, 0.85);
-  --primary: #00B288;
-  --primary-glow: rgba(0, 178, 136, 0.3);
-  --secondary: #0A5C4A;
-  --text-main: #061F18;
-  --text-muted: #117861;
-  --border-light: rgba(10, 92, 74, 0.15);
+  --primary: #0284c7;
+  --primary-glow: rgba(2, 132, 199, 0.2);
+  --secondary: #0369a1;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --border-light: rgba(2, 132, 199, 0.15);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -75,12 +75,25 @@ body {
 .logo-text { font-weight: 800; font-size: 1.3rem; color: var(--text-main); letter-spacing: -0.5px; }
 
 /* Desktop Nav Links */
-.nav-links { display: flex; gap: 2rem; align-items: center; }
-.nav-link { font-weight: 500; color: var(--text-muted); text-decoration: none; transition: 0.3s; position: relative; }
-.nav-link:hover, .nav-link.active { color: var(--primary); }
-.nav-link.active::after {
-  content: ''; position: absolute; bottom: -5px; left: 0; width: 100%; height: 2px;
-  background: var(--primary); border-radius: 2px;
+.nav-links { display: flex; gap: 1rem; align-items: center; }
+.nav-link { 
+  font-weight: 500; 
+  color: var(--text-muted); 
+  text-decoration: none; 
+  transition: all 0.3s ease; 
+  position: relative; 
+  padding: 8px 16px;
+  border-radius: 12px;
+}
+.nav-link:hover { 
+  color: var(--text-main); 
+  background: rgba(255, 255, 255, 0.05);
+}
+.nav-link.active { 
+  color: var(--primary); 
+  background: var(--primary-glow);
+  border: 1px solid var(--border-light);
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
 }
 
 .discord-btn {
