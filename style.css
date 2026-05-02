@@ -342,29 +342,4 @@ footer a:hover {
   h2 {
     font-size: 1.8rem !important;
   }
-
-  /* Horizontal scroll for feature cards */
-  .features-grid {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    padding-bottom: 20px; /* Space for scrollbar */
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Firefox */
-  }
-
-  .features-grid::-webkit-scrollbar {
-    display: none; /* Safari/Chrome */
-  }
-
-  .features-grid > .glass-panel {
-    flex: 0 0 85%;
-    scroll-snap-align: center;
-    margin-right: 15px;
-  }
-
-  .features-grid > .glass-panel:last-child {
-    margin-right: 0;
-  }
 }
