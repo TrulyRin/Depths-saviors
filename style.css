@@ -41,6 +41,11 @@
   box-sizing: border-box;
 }
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 body {
   font-family: var(--font-main);
   background-color: var(--bg-deep);
@@ -48,7 +53,6 @@ body {
   background-attachment: fixed;
   color: var(--text-main);
   transition: background 0.3s, color 0.3s;
-  overflow-x: hidden;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
