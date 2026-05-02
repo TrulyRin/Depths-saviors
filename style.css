@@ -288,9 +288,30 @@ footer a:hover {
    4. Mobile Responsive Styles
    ========================================= */
 @media (max-width: 768px) {
+  .nav-container {
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px 0;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
 
   .nav-link {
-    font-size: 1.2rem;
+    font-size: 1rem;
+    padding: 6px 12px;
+  }
+
+  .navbar {
+    height: auto;
+    position: relative;
+  }
+
+  .logo-text {
+    font-size: 1.1rem;
   }
 
   /* Fix vertical stacking for setup steps */
@@ -300,10 +321,14 @@ footer a:hover {
   }
 
   .main-content {
-    padding-top: 110px;
+    padding-top: 40px;
   }
 
   h1 {
-    font-size: 2.8rem !important;
+    font-size: 2.2rem !important;
+  }
+
+  h2 {
+    font-size: 1.8rem !important;
   }
 }
