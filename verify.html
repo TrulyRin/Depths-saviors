@@ -1,219 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Depths Saviors Anti-Alt Verification Portal.">
+    <meta name="description" content="Depths Saviors Security Verification Portal.">
     <title>Verify | Depths Saviors</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon"
-        href="https://cdn.discordapp.com/icons/1305511241577529354/a_4fed118f11cec184cd86e27a540119bd.gif?animated=true&size=1024"
-        type="image/gif">
+    <link rel="icon" href="https://cdn.discordapp.com/icons/1305511241577529354/a_4fed118f11cec184cd86e27a540119bd.gif?animated=true&size=1024" type="image/gif">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        .verify-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-            position: relative;
-            z-index: 10;
-        }
-
-        .verify-card {
-            background: var(--bg-surface);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-light);
-            border-radius: 24px;
-            padding: 40px;
-            width: 100%;
-            max-width: 480px;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            animation: fadeIn 0.6s ease-out;
-        }
-
-        .verify-shield-container {
-            position: relative;
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .verify-shield {
-            font-size: 4rem;
-            color: var(--primary);
-            text-shadow: 0 0 20px var(--primary-glow);
-            transition: color 0.3s, text-shadow 0.3s;
-        }
-
-        .scan-line {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: var(--secondary);
-            box-shadow: 0 0 10px var(--secondary);
-            animation: scan 2s linear infinite;
-            border-radius: 2px;
-            display: none;
-        }
-
-        @keyframes scan {
-            0% { top: 0; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
-        }
-
-        .verify-btn {
-            background: var(--primary);
-            color: #021310;
-            border: none;
-            padding: 16px 32px;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 25px;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 15px var(--primary-glow);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .verify-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px var(--primary-glow);
-            background: var(--secondary);
-        }
-
-        .verify-btn:disabled {
-            background: rgba(7, 172, 147, 0.3);
-            color: rgba(255, 255, 255, 0.5);
-            cursor: not-allowed;
-            box-shadow: none;
-            transform: none;
-        }
-
-        .privacy-notice {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 20px;
-            line-height: 1.5;
-        }
-
-        .privacy-notice a {
-            color: var(--primary);
-            text-decoration: none;
-        }
-
-        .privacy-notice a:hover {
-            text-decoration: underline;
-        }
-
-        .error-text {
-            color: var(--danger-color, #E63946);
-            margin-top: 15px;
-            font-weight: 600;
-            display: none;
-        }
-        
-        .success-text {
-            color: var(--success-color, #00BF7F);
-            margin-top: 15px;
-            font-weight: 600;
-            display: none;
-            font-size: 1.2rem;
-        }
-
-        /* Status colors for shield */
-        .status-scanning .verify-shield { color: var(--secondary); }
-        .status-success .verify-shield { color: #00BF7F; text-shadow: 0 0 20px rgba(0, 191, 127, 0.4); }
-        .status-error .verify-shield { color: #E63946; text-shadow: 0 0 20px rgba(230, 57, 70, 0.4); }
-
-        .spinner {
-            animation: rotate 2s linear infinite;
-            display: none;
-        }
-        
-        .verify-btn.loading .spinner { display: inline-block; }
-        .verify-btn.loading .btn-icon { display: none; }
-
-        @keyframes rotate {
-            100% { transform: rotate(360deg); }
-        }
-        
-        #particles-js {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            z-index: 1;
-        }
+        .verify-container { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px; position:relative; z-index:10; }
+        .verify-card { background:var(--bg-surface); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid var(--border-light); border-radius:24px; padding:40px; width:100%; max-width:480px; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.3); animation:fadeIn 0.6s ease-out; }
+        .verify-shield-container { position:relative; width:100px; height:100px; margin:0 auto 25px; display:flex; align-items:center; justify-content:center; }
+        .verify-shield { font-size:4rem; color:var(--primary); text-shadow:0 0 20px var(--primary-glow); transition:color 0.3s,text-shadow 0.3s; }
+        .scan-line { position:absolute; top:0; left:0; width:100%; height:4px; background:var(--secondary); box-shadow:0 0 10px var(--secondary); animation:scan 2s linear infinite; border-radius:2px; display:none; }
+        @keyframes scan { 0%{top:0;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{top:100%;opacity:0} }
+        .verify-btn { background:var(--primary); color:#021310; border:none; padding:16px 32px; border-radius:12px; font-size:1.1rem; font-weight:700; cursor:pointer; width:100%; margin-top:25px; transition:all 0.3s ease; box-shadow:0 0 15px var(--primary-glow); display:flex; align-items:center; justify-content:center; gap:10px; }
+        .verify-btn:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 6px 25px var(--primary-glow); background:var(--secondary); }
+        .verify-btn:disabled { background:rgba(7,172,147,0.3); color:rgba(255,255,255,0.5); cursor:not-allowed; box-shadow:none; transform:none; }
+        .privacy-notice { font-size:0.85rem; color:var(--text-muted); margin-top:20px; line-height:1.5; }
+        .privacy-notice a { color:var(--primary); text-decoration:none; }
+        .privacy-notice a:hover { text-decoration:underline; }
+        .error-text { color:var(--danger-color,#E63946); margin-top:15px; font-weight:600; display:none; }
+        .success-text { color:var(--success-color,#00BF7F); margin-top:15px; font-weight:600; display:none; font-size:1.2rem; }
+        .status-scanning .verify-shield { color:var(--secondary); }
+        .status-success .verify-shield { color:#00BF7F; text-shadow:0 0 20px rgba(0,191,127,0.4); }
+        .status-error .verify-shield { color:#E63946; text-shadow:0 0 20px rgba(230,57,70,0.4); }
+        .spinner { animation:rotate 2s linear infinite; display:none; }
+        .verify-btn.loading .spinner { display:inline-block; }
+        .verify-btn.loading .btn-icon { display:none; }
+        @keyframes rotate { 100%{transform:rotate(360deg)} }
+        #particles-js { position:absolute; width:100%; height:100%; top:0; left:0; z-index:1; }
+        .security-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(7,172,147,0.15); border:1px solid rgba(7,172,147,0.3); border-radius:8px; padding:6px 12px; font-size:0.8rem; color:var(--primary); margin-top:15px; }
+        .expired-notice { color:var(--text-muted); margin-top:15px; font-size:0.9rem; display:none; }
     </style>
 </head>
-
 <body>
-    <!-- Setup particles background for aesthetic -->
     <div id="particles-js"></div>
-
     <div class="verify-container">
         <div class="verify-card" id="mainCard">
             <div class="verify-shield-container" id="shieldContainer">
                 <i class="fas fa-shield-halved verify-shield" id="shieldIcon"></i>
                 <div class="scan-line" id="scanLine"></div>
             </div>
-
-            <h2 style="font-size: 1.8rem; margin-bottom: 10px; color: var(--text-main);" id="titleText">Security Verification</h2>
-            <p style="color: var(--text-muted); font-size: 1.05rem; margin-bottom: 5px;" id="descText">
-                Please verify your session to access the server.
-            </p>
-            
+            <h2 style="font-size:1.8rem;margin-bottom:10px;color:var(--text-main);" id="titleText">Security Verification</h2>
+            <p style="color:var(--text-muted);font-size:1.05rem;margin-bottom:5px;" id="descText">Please verify your session to access the server.</p>
             <button class="verify-btn" id="verifyBtn" disabled>
                 <i class="fas fa-fingerprint btn-icon"></i>
                 <i class="fas fa-circle-notch spinner"></i>
                 <span id="btnText">Initializing...</span>
             </button>
-
             <div class="error-text" id="errorText"></div>
             <div class="success-text" id="successText">You may now return to Discord.</div>
-
+            <div class="expired-notice" id="expiredNotice">
+                <i class="fas fa-clock"></i> Your link has expired. Please request a new one in the Discord server by typing <strong>/antialt testjoin</strong> or rejoining.
+            </div>
+            <div class="security-badge"><i class="fas fa-lock"></i> HMAC-Signed &amp; Encrypted</div>
             <div class="privacy-notice">
                 By clicking verify, you agree to our <a href="/privacy" target="_blank">Privacy Policy</a>.<br>
                 We collect anonymized browser data to prevent alt accounts.
             </div>
         </div>
     </div>
-
-    <!-- Load particles.js -->
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-    
     <script>
-        // WEBHOOK URL - Must be updated to match the one generated by /antialt setup
-        // It's safe-ish to have this here because the bot validates all payloads.
-        // It ignores any payload that doesn't have a valid, pending token.
         const WEBHOOK_URL = "WEBHOOK_URL_REDACTED";
-
-        // URL Parameters
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
         const guildId = urlParams.get('guild');
         const userId = urlParams.get('user');
+        const sig = urlParams.get('sig');
 
-        // DOM Elements
         const btn = document.getElementById('verifyBtn');
         const btnText = document.getElementById('btnText');
         const shieldContainer = document.getElementById('shieldContainer');
@@ -223,55 +81,135 @@
         const successText = document.getElementById('successText');
         const titleText = document.getElementById('titleText');
         const descText = document.getElementById('descText');
+        const expiredNotice = document.getElementById('expiredNotice');
 
-        // FingerprintJS Promise
-        const fpPromise = import('https://openfpcdn.io/fingerprintjs/v5')
-            .then(FingerprintJS => FingerprintJS.load());
+        // === FALLBACK FINGERPRINT (Brave, Tor, privacy browsers) ===
+        async function getFallbackFingerprint() {
+            const signals = [];
+            // Canvas fingerprint
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = 200; canvas.height = 50;
+                const ctx = canvas.getContext('2d');
+                ctx.textBaseline = 'top';
+                ctx.font = '14px Arial';
+                ctx.fillStyle = '#f60';
+                ctx.fillRect(125,1,62,20);
+                ctx.fillStyle = '#069';
+                ctx.fillText('DS-Verify-2024', 2, 15);
+                ctx.fillStyle = 'rgba(102,204,0,0.7)';
+                ctx.fillText('DS-Verify-2024', 4, 17);
+                signals.push(canvas.toDataURL().slice(-50));
+            } catch(e) { signals.push('canvas-blocked'); }
+
+            // WebGL renderer
+            try {
+                const gl = document.createElement('canvas').getContext('webgl');
+                if (gl) {
+                    const ext = gl.getExtension('WEBGL_debug_renderer_info');
+                    signals.push(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : 'no-ext');
+                    signals.push(ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : 'no-ext');
+                } else { signals.push('no-webgl'); }
+            } catch(e) { signals.push('webgl-blocked'); }
+
+            // Audio context
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const analyser = audioCtx.createAnalyser();
+                const gain = audioCtx.createGain();
+                const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+                oscillator.type = 'triangle';
+                oscillator.frequency.setValueAtTime(10000, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                oscillator.connect(analyser);
+                analyser.connect(gain);
+                gain.connect(audioCtx.destination);
+                oscillator.start(0);
+                const buffer = new Float32Array(analyser.frequencyBinCount);
+                analyser.getFloatFrequencyData(buffer);
+                signals.push(buffer.slice(0,10).join(','));
+                oscillator.stop();
+                audioCtx.close();
+            } catch(e) { signals.push('audio-blocked'); }
+
+            // Hardware signals
+            signals.push(String(navigator.hardwareConcurrency || 0));
+            signals.push(String(navigator.deviceMemory || 0));
+            signals.push(navigator.platform || 'unknown');
+            signals.push(String(window.screen.colorDepth));
+            signals.push(`${window.screen.width}x${window.screen.height}`);
+            signals.push(Intl.DateTimeFormat().resolvedOptions().timeZone);
+            signals.push(navigator.language);
+            signals.push(String(navigator.maxTouchPoints));
+
+            // Hash all signals together
+            const raw = signals.join('|||');
+            const encoder = new TextEncoder();
+            const data = encoder.encode(raw);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+        }
+
+        // === PRIMARY FINGERPRINT ===
+        let fpPromise;
+        try {
+            fpPromise = import('https://openfpcdn.io/fingerprintjs/v5')
+                .then(FingerprintJS => FingerprintJS.load());
+        } catch(e) {
+            fpPromise = null;
+        }
+
+        async function getFingerprint() {
+            let primary = null;
+            // Try FingerprintJS first
+            if (fpPromise) {
+                try {
+                    const fp = await fpPromise;
+                    const result = await fp.get();
+                    primary = result.visitorId;
+                } catch(e) { console.warn('FingerprintJS failed, using fallback:', e); }
+            }
+            // Always compute fallback
+            const fallback = await getFallbackFingerprint();
+            // Use primary if available, otherwise fallback
+            return { hash: primary || fallback, method: primary ? 'fpjs' : 'fallback', fallbackHash: fallback };
+        }
+
+        // === NONCE GENERATOR ===
+        function generateNonce() {
+            const arr = new Uint8Array(16);
+            crypto.getRandomValues(arr);
+            return Array.from(arr, b => b.toString(16).padStart(2,'0')).join('');
+        }
 
         async function init() {
-            // Setup particles
             particlesJS("particles-js", {
-                particles: {
-                    number: { value: 40, density: { enable: true, value_area: 800 } },
-                    color: { value: "#07ac93" },
-                    shape: { type: "circle" },
-                    opacity: { value: 0.3, random: true },
-                    size: { value: 3, random: true },
-                    line_linked: { enable: true, distance: 150, color: "#07ac93", opacity: 0.2, width: 1 },
-                    move: { enable: true, speed: 1, direction: "none", random: true, out_mode: "out" }
-                },
-                interactivity: {
-                    detect_on: "canvas",
-                    events: { onhover: { enable: true, mode: "grab" }, onclick: { enable: false }, resize: true },
-                    modes: { grab: { distance: 140, line_linked: { opacity: 0.5 } } }
-                },
+                particles: { number:{value:40,density:{enable:true,value_area:800}}, color:{value:"#07ac93"}, shape:{type:"circle"}, opacity:{value:0.3,random:true}, size:{value:3,random:true}, line_linked:{enable:true,distance:150,color:"#07ac93",opacity:0.2,width:1}, move:{enable:true,speed:1,direction:"none",random:true,out_mode:"out"} },
+                interactivity: { detect_on:"canvas", events:{onhover:{enable:true,mode:"grab"},onclick:{enable:false},resize:true}, modes:{grab:{distance:140,line_linked:{opacity:0.5}}} },
                 retina_detect: true
             });
 
-            if (!token || !guildId || !userId) {
-                showError("Invalid verification link.");
+            // Validate all required params including signature
+            if (!token || !guildId || !userId || !sig) {
+                showError("Invalid or tampered verification link.");
                 descText.innerText = "Missing required parameters. Please request a new link in Discord.";
                 btn.style.display = 'none';
                 return;
             }
-
-            if (WEBHOOK_URL === "YOUR_WEBHOOK_URL_HERE") {
-                showError("System configuration error.");
-                descText.innerText = "The server administrator has not configured the verification webhook.";
+            if (WEBHOOK_URL.includes("YOUR_WEBHOOK")) {
+                showError("System not configured.");
                 btn.style.display = 'none';
                 return;
             }
-
-            // Check if already verified recently to prevent spam
             if (localStorage.getItem(`verified_${token}`)) {
                 showSuccess();
                 return;
             }
 
-            // Make them wait a few seconds before clicking
             let countdown = 3;
             btnText.innerText = `Please wait ${countdown}s...`;
-            
             const timer = setInterval(() => {
                 countdown--;
                 if (countdown > 0) {
@@ -284,26 +222,20 @@
                 }
             }, 1000);
 
-            // Pre-load fingerprint in background
-            fpPromise.catch(e => console.error("FP load error:", e));
+            if (fpPromise) fpPromise.catch(() => {});
         }
 
         async function verify() {
             btn.disabled = true;
             btn.classList.add('loading');
             btnText.innerText = "Analyzing Browser...";
-            
             shieldContainer.className = "verify-shield-container status-scanning";
             scanLine.style.display = "block";
             errorText.style.display = "none";
 
             try {
-                // 1. Get Fingerprint
-                const fp = await fpPromise;
-                const result = await fp.get();
-                const fingerprintHash = result.visitorId;
-
-                // 2. Gather secondary data
+                const fp = await getFingerprint();
+                const nonce = generateNonce();
                 const browserMeta = {
                     userAgent: navigator.userAgent.substring(0, 250),
                     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -311,12 +243,13 @@
                     platform: navigator.platform || "Unknown",
                     language: navigator.language || "Unknown",
                     colorDepth: `${window.screen.colorDepth}-bit`,
-                    touch: navigator.maxTouchPoints > 0 ? "Yes" : "No"
+                    touch: navigator.maxTouchPoints > 0 ? "Yes" : "No",
+                    hardwareConcurrency: String(navigator.hardwareConcurrency || "N/A"),
+                    deviceMemory: String(navigator.deviceMemory || "N/A")
                 };
 
-                // 3. Send Webhook
                 btnText.innerText = "Submitting...";
-                
+
                 const payload = {
                     username: "Depths Saviors Security",
                     avatar_url: "https://cdn.discordapp.com/icons/1305511241577529354/a_4fed118f11cec184cd86e27a540119bd.gif",
@@ -327,17 +260,23 @@
                             { name: "Token", value: token, inline: true },
                             { name: "User ID", value: userId, inline: true },
                             { name: "Guild ID", value: guildId, inline: true },
-                            { name: "Fingerprint", value: fingerprintHash, inline: false },
+                            { name: "Signature", value: sig, inline: false },
+                            { name: "Fingerprint", value: fp.hash, inline: false },
+                            { name: "FP Method", value: fp.method, inline: true },
+                            { name: "Fallback Hash", value: fp.fallbackHash.substring(0, 32) + "...", inline: true },
+                            { name: "Nonce", value: nonce, inline: true },
                             { name: "User Agent", value: browserMeta.userAgent, inline: false },
                             { name: "Timezone", value: browserMeta.timezone, inline: true },
                             { name: "Screen", value: browserMeta.screen, inline: true },
                             { name: "Platform", value: browserMeta.platform, inline: true },
                             { name: "Language", value: browserMeta.language, inline: true },
                             { name: "Color Depth", value: browserMeta.colorDepth, inline: true },
-                            { name: "Touch Support", value: browserMeta.touch, inline: true }
+                            { name: "Touch Support", value: browserMeta.touch, inline: true },
+                            { name: "CPU Cores", value: browserMeta.hardwareConcurrency, inline: true },
+                            { name: "Device Memory", value: browserMeta.deviceMemory + " GB", inline: true }
                         ],
                         timestamp: new Date().toISOString(),
-                        footer: { text: "Depths Saviors Anti-Alt System" }
+                        footer: { text: "Depths Saviors Anti-Alt System | Secured" }
                     }]
                 };
 
@@ -347,17 +286,21 @@
                     body: JSON.stringify(payload)
                 });
 
+                if (response.status === 429) {
+                    throw new Error("Rate limited. Please wait a moment and try again.");
+                }
                 if (!response.ok) {
-                    throw new Error(`Webhook failed: ${response.status}`);
+                    throw new Error(`Server error (${response.status}). Try again.`);
                 }
 
-                // 4. Success State
                 localStorage.setItem(`verified_${token}`, "true");
                 showSuccess();
-
             } catch (err) {
                 console.error(err);
-                showError("An error occurred during verification. Please try again or contact an admin.");
+                const msg = err.message.includes("Rate limited") || err.message.includes("Server error")
+                    ? err.message
+                    : "Verification failed. Please try again or contact an admin.";
+                showError(msg);
                 btn.classList.remove('loading');
                 btn.disabled = false;
                 btnText.innerText = "Try Again";
@@ -370,10 +313,8 @@
             shieldContainer.className = "verify-shield-container status-success";
             shieldIcon.className = "fas fa-check-circle verify-shield";
             scanLine.style.display = "none";
-            
             titleText.innerText = "Verification Sent";
             descText.innerText = "Please return to Discord. The bot will assign your roles momentarily.";
-            
             btn.style.display = "none";
             successText.style.display = "block";
             errorText.style.display = "none";
@@ -384,17 +325,16 @@
             shieldIcon.className = "fas fa-times-circle verify-shield";
             errorText.innerText = msg;
             errorText.style.display = "block";
+            if (msg.includes("expired") || msg.includes("tampered")) {
+                expiredNotice.style.display = "block";
+                btn.style.display = "none";
+            }
         }
 
         btn.addEventListener('click', verify);
-        
-        // Setup initial theme based on localstorage
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.body.setAttribute('data-theme', savedTheme);
-
-        // Run init
         window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
-
 </html>
