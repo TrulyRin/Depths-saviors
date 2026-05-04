@@ -96,10 +96,33 @@ const DS = {
 
     // ── API Helpers ─────────────────────────────────────
 
+    /** Safe timeout signal — polyfill for browsers without AbortSignal.timeout */
+    _timeoutSignal: function(ms) {
+        if (typeof AbortSignal.timeout === 'function') {
+            return AbortSignal.timeout(ms);
+        }
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), ms);
+        return controller.signal;
+    },
+
+    /** Detect if a fetch error is caused by a browser shield/blocker */
+    _isBlockedError: function(err) {
+        return err instanceof TypeError && (
+            err.message.includes('Failed to fetch') ||
+            err.message.includes('NetworkError') ||
+            err.message.includes('Load failed') ||
+            err.message.includes('blocked')
+        );
+    },
+
     fetchDiscord: async function(url) {
         try {
             const res = await fetch(url, {
-                headers: { 'Authorization': `Bearer ${this.token}` }
+                headers: { 'Authorization': `Bearer ${this.token}` },
+                credentials: 'omit',       // Avoid CORS cookie issues in Brave
+                mode: 'cors',
+                signal: this._timeoutSignal(10000)
             });
             if (res.status === 401) { 
                 console.error('[Discord API] 401 Unauthorized for', url);
@@ -113,6 +136,9 @@ const DS = {
             return await res.json();
         } catch (e) {
             console.error('[Discord API] Network error for', url, e);
+            if (this._isBlockedError(e)) {
+                this._showShieldWarning();
+            }
             return null;
         }
     },
@@ -121,7 +147,10 @@ const DS = {
         try {
             const opts = {
                 method: method,
-                headers: { 'Authorization': `Bearer ${this.token}` }
+                headers: { 'Authorization': `Bearer ${this.token}` },
+                credentials: 'omit',
+                mode: 'cors',
+                signal: this._timeoutSignal(10000)
             };
             if (body) {
                 opts.headers['Content-Type'] = 'application/json';
@@ -146,12 +175,38 @@ const DS = {
         try {
             const res = await fetch(this.apiBase + '/bot/guilds', {
                 headers: { 'Authorization': `Bearer ${this.token}` },
-                signal: AbortSignal.timeout(4000)
+                credentials: 'omit',
+                mode: 'cors',
+                signal: this._timeoutSignal(4000)
             });
             if (res.ok) { this.botApiOnline = true; return await res.json(); }
         } catch (e) { /* unreachable */ }
         this.botApiOnline = false;
         return null;
+    },
+
+    /** Show a warning when browser shields are blocking API calls */
+    _showShieldWarning: function() {
+        if (this._shieldWarned) return;
+        this._shieldWarned = true;
+
+        const isBrave = navigator.brave && typeof navigator.brave.isBrave === 'function';
+        const browserName = isBrave ? 'Brave' : 'your browser';
+
+        const warning = document.createElement('div');
+        warning.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;background:#1a1a2e;border-bottom:3px solid #E6A23C;padding:16px 24px;text-align:center;font-size:0.9rem;';
+        warning.innerHTML = `
+            <p style="color:#E6A23C;font-weight:700;margin-bottom:6px;">
+                <i class="fas fa-shield-halved"></i> ${browserName} is blocking Discord API requests
+            </p>
+            <p style="color:#ccc;font-size:0.85rem;">
+                ${isBrave 
+                    ? 'Click the <strong>Brave Shield (lion icon)</strong> in the address bar → set Shields to <strong>Down</strong> for this site, then reload.'
+                    : 'Your browser\'s privacy settings or an ad blocker may be blocking cross-origin requests to <code>discord.com</code>. Try disabling your shield/blocker for this site, or use a different browser.'}
+            </p>
+            <button onclick="this.parentElement.remove()" style="margin-top:8px;background:#E6A23C;color:#000;border:none;padding:6px 18px;border-radius:6px;font-weight:600;cursor:pointer;">Dismiss</button>
+        `;
+        document.body.prepend(warning);
     },
 
     toast: function(msg, type="success") {
