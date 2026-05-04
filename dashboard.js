@@ -464,71 +464,133 @@ const DS = {
             const data = await this.fetchAPI(`/guild/${gid}/gankping`);
             if (!data) return;
             
-            let html = '';
+            let myNetworksHtml = '';
+            let availableNetworksHtml = '';
+            
             data.networks.forEach(net => {
-                const isEnabled = net.member ? net.member.enabled : false;
-                const autoNotify = net.member ? net.member.auto_notify : false;
-                
-                html += `
-                <div class="network-card">
-                    <div class="net-header">
-                        ${net.icon_url ? `<img src="${net.icon_url}" class="net-icon">` : ''}
-                        <div>
-                            <div class="net-name">${net.name} ${net.is_owner ? '<span class="net-badge">Owner</span>' : ''}</div>
-                            <div class="net-id">Network ID: ${net.network_id} • ${net.member_count} guilds</div>
-                        </div>
-                    </div>
+                if (net.is_member) {
+                    const isEnabled = net.member ? net.member.enabled : false;
+                    const autoNotify = net.member ? net.member.auto_notify : false;
                     
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value">${net.stats.total_ganks}</div>
-                            <div class="stat-label">Total Ganks</div>
+                    myNetworksHtml += `
+                    <div class="network-card">
+                        <div class="net-header">
+                            ${net.icon_url ? `<img src="${net.icon_url}" class="net-icon">` : ''}
+                            <div>
+                                <div class="net-name">${net.name} ${net.is_owner ? '<span class="net-badge">Owner</span>' : ''}</div>
+                                <div class="net-id">Network ID: ${net.network_id} • ${net.member_count} guilds</div>
+                            </div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${net.stats.coming_responses}</div>
-                            <div class="stat-label">Assists</div>
-                        </div>
-                    </div>
-
-                    ${net.member ? `
-                    <div class="setting-card">
-                        <h3><i class="fas fa-sliders"></i> Notification Setup</h3>
                         
-                        <div class="split-columns">
-                            <div class="split-col">
-                                <div class="setting-row">
-                                    <div class="setting-label">Enable Notifications<br><small>Receive pings from this network</small></div>
-                                    <div class="toggle ${isEnabled ? 'active' : ''}" id="gp-toggle-${net.network_id}" onclick="this.classList.toggle('active')"></div>
-                                </div>
-                                <div class="setting-row">
-                                    <div class="setting-label">Auto Notify<br><small>Skip manual confirmation</small></div>
-                                    <div class="toggle ${autoNotify ? 'active' : ''}" id="gp-auto-${net.network_id}" onclick="this.classList.toggle('active')"></div>
-                                </div>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value">${net.stats.total_ganks}</div>
+                                <div class="stat-label">Total Ganks</div>
                             </div>
-                            <div class="split-col">
-                                <div class="setting-row">
-                                    <div class="setting-label">Target Channel<br><small>Where to post incoming pings</small></div>
-                                    ${this.generateChannelSelect(`gp-ch-${net.network_id}`, net.member.channel_id)}
-                                </div>
-                                <div class="setting-row">
-                                    <div class="setting-label">Ping Role<br><small>Role to mention on new ganks</small></div>
-                                    ${this.generateRoleSelect(`gp-role-${net.network_id}`, net.member.ping_role_id)}
-                                </div>
-                                <div class="setting-row">
-                                    <div class="setting-label">Ally Role (Optional)<br><small>Role for recognized allies</small></div>
-                                    ${this.generateRoleSelect(`gp-ally-${net.network_id}`, net.member.ally_role_id)}
-                                </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${net.stats.coming_responses}</div>
+                                <div class="stat-label">Assists</div>
                             </div>
                         </div>
+                        
+                        <div class="setting-card" style="margin-top:16px;">
+                            <h3><i class="fas fa-sliders"></i> Notification Setup</h3>
+                            
+                            <div class="split-columns">
+                                <div class="split-col">
+                                    <div class="setting-row">
+                                        <div class="setting-label">Enable Notifications<br><small>Receive pings from this network</small></div>
+                                        <div class="toggle ${isEnabled ? 'active' : ''}" id="gp-toggle-${net.network_id}" onclick="this.classList.toggle('active')"></div>
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-label">Auto Notify<br><small>Skip manual confirmation</small></div>
+                                        <div class="toggle ${autoNotify ? 'active' : ''}" id="gp-auto-${net.network_id}" onclick="this.classList.toggle('active')"></div>
+                                    </div>
+                                </div>
+                                <div class="split-col">
+                                    <div class="setting-row">
+                                        <div class="setting-label">Target Channel<br><small>Where to post incoming pings</small></div>
+                                        ${this.generateChannelSelect(`gp-ch-${net.network_id}`, net.member.channel_id)}
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-label">Ping Role<br><small>Role to mention on new ganks</small></div>
+                                        ${this.generateRoleSelect(`gp-role-${net.network_id}`, net.member.ping_role_id)}
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-label">Ally Role (Optional)<br><small>Role for recognized allies</small></div>
+                                        ${this.generateRoleSelect(`gp-ally-${net.network_id}`, net.member.ally_role_id)}
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div class="setting-row" style="margin-top:20px;border-top:none;">
-                            <button class="btn-save" onclick="DS.saveGankPing('${net.network_id}')">Save Changes</button>
+                            <div class="setting-row" style="margin-top:20px;border-top:none;">
+                                <button class="btn-save" onclick="DS.saveGankPing('${net.network_id}')">Save Changes</button>
+                            </div>
+                        </div>
+                    </div>`;
+                } else {
+                    const btnState = net.is_pending 
+                        ? `<button class="btn-save" style="background:#555;cursor:not-allowed;" disabled>Pending Approval</button>`
+                        : `<button class="btn-save" onclick="DS.joinNetwork('${net.network_id}')">Request to Join</button>`;
+                        
+                    availableNetworksHtml += `
+                    <div class="network-card" style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="net-header" style="margin-bottom:0;">
+                            ${net.icon_url ? `<img src="${net.icon_url}" class="net-icon">` : ''}
+                            <div>
+                                <div class="net-name">${net.name}</div>
+                                <div class="net-id">ID: ${net.network_id} • ${net.member_count} members</div>
+                                <div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px;">${net.description || 'No description provided.'}</div>
+                            </div>
+                        </div>
+                        <div>
+                            ${btnState}
+                        </div>
+                    </div>`;
+                }
+            });
+            
+            if (!myNetworksHtml) myNetworksHtml = `<p style="color:var(--text-muted);margin-bottom:20px;">This server is not a part of any gank networks yet. Join or create one below!</p>`;
+            if (!availableNetworksHtml) availableNetworksHtml = `<p style="color:var(--text-muted);margin-bottom:20px;">No public networks available to join.</p>`;
+
+            const createHtml = `
+            <div class="setting-card" style="margin-top:40px;">
+                <h3><i class="fas fa-plus-circle"></i> Create New Network</h3>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">Create a new gankping network. Only server Administrators can manage the network settings in Discord.</p>
+                <div class="split-columns">
+                    <div class="split-col">
+                        <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                            <div class="setting-label">Network ID (lowercase, no spaces, 3-32 chars)</div>
+                            <input type="text" id="gp-create-id" class="ds-input" style="width:100%" placeholder="e.g. my-awesome-guild">
+                        </div>
+                        <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                            <div class="setting-label">Display Name</div>
+                            <input type="text" id="gp-create-name" class="ds-input" style="width:100%" placeholder="e.g. Awesome Guild Pings">
                         </div>
                     </div>
-                    ` : '<p>Not a member of this network.</p>'}
-                </div>`;
-            });
-            container.innerHTML = html;
+                    <div class="split-col">
+                        <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                            <div class="setting-label">Description (optional)</div>
+                            <textarea id="gp-create-desc" class="ds-input" style="width:100%;height:100px;resize:vertical;" placeholder="A brief description of this network..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="setting-row" style="margin-top:20px;border-top:none;">
+                    <button class="btn-save" onclick="DS.createNetwork()">Create Network</button>
+                </div>
+            </div>`;
+
+            container.innerHTML = `
+                <div style="margin-bottom:40px;">
+                    <h3><i class="fas fa-network-wired"></i> My Networks</h3>
+                    <div style="margin-top:16px;">${myNetworksHtml}</div>
+                </div>
+                <div style="margin-bottom:20px;">
+                    <h3><i class="fas fa-globe"></i> Available Networks</h3>
+                    <div style="margin-top:16px;">${availableNetworksHtml}</div>
+                </div>
+                ${createHtml}
+            `;
         }
         else if (key === 'antialt') {
             const data = await this.fetchAPI(`/guild/${gid}/antialt`);
@@ -713,16 +775,18 @@ const DS = {
         else if (key === 'faq') {
             const data = await this.fetchAPI(`/guild/${gid}/faq`);
             if (!data) return;
-            let html = '<div class="setting-card">';
-            data.entries.forEach(e => {
-                html += `
-                <div class="faq-entry">
-                    <div class="faq-q">${e.question}</div>
-                    <div class="faq-a">${e.answer}</div>
-                </div>`;
-            });
-            html += '</div>';
-            container.innerHTML = html;
+            let faqText = data.entries.map(e => `${e.question} | ${e.answer}`).join('\n');
+            container.innerHTML = `
+            <div class="setting-card">
+                <h3><i class="fas fa-circle-question"></i> AI FAQ System</h3>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">The AI uses SentenceTransformers to detect similar questions. Format each entry on a new line like: <br><code>trigger question | the response text</code></p>
+                <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                    <textarea id="faq-entries" class="ds-input" style="width:100%;height:300px;resize:vertical;" placeholder="how to join | Make a ticket...">${faqText}</textarea>
+                </div>
+                <div class="setting-row" style="margin-top:20px;border-top:none;">
+                    <button class="btn-save" onclick="DS.saveFaq()">Save Config</button>
+                </div>
+            </div>`;
         }
         else if (key === 'tryout') {
             const data = await this.fetchAPI(`/guild/${gid}/tryout`);
@@ -916,6 +980,38 @@ const DS = {
         const res = await this.fetchAPI(`/guild/${gid}/gankping`, 'POST', body);
         if (res && res.ok) this.toast("GankPing settings saved");
     },
+    
+    joinNetwork: async function(netId) {
+        if (!confirm(`Request to join network ${netId}?`)) return;
+        const gid = this.currentGuild.id;
+        const res = await this.fetchAPI(`/guild/${gid}/gankping/join`, 'POST', { network_id: netId });
+        if (res && res.ok) {
+            this.toast(res.status === 'pending' ? "Join request sent (pending approval)" : "Successfully joined network!");
+            this.renderPanel('gankping');
+        }
+    },
+    
+    createNetwork: async function() {
+        const gid = this.currentGuild.id;
+        const netId = document.getElementById('gp-create-id').value.trim();
+        const name = document.getElementById('gp-create-name').value.trim();
+        const desc = document.getElementById('gp-create-desc').value.trim();
+        
+        if (!netId || !name) {
+            this.toast("Network ID and Name are required", "error");
+            return;
+        }
+        
+        const res = await this.fetchAPI(`/guild/${gid}/gankping/create`, 'POST', {
+            network_id: netId,
+            name: name,
+            description: desc
+        });
+        if (res && res.ok) {
+            this.toast("Network created successfully!");
+            this.renderPanel('gankping');
+        }
+    },
 
     saveAntiAlt: async function() {
         const gid = this.currentGuild.id;
@@ -1035,6 +1131,24 @@ const DS = {
         };
         const res = await this.fetchAPI(`/guild/${gid}/forum_moderator`, 'POST', body);
         if (res && res.ok) this.toast("Forum Moderator config saved");
+    },
+    
+    saveFaq: async function() {
+        const gid = this.currentGuild.id;
+        const text = document.getElementById('faq-entries').value;
+        const entries = [];
+        text.split('\\n').forEach(line => {
+            const parts = line.split('|');
+            if (parts.length >= 2) {
+                entries.push({
+                    question: parts[0].trim(),
+                    answer: parts.slice(1).join('|').trim()
+                });
+            }
+        });
+        
+        const res = await this.fetchAPI(`/guild/${gid}/faq`, 'POST', { entries });
+        if (res && res.ok) this.toast("FAQ config saved");
     },
     
     saveCommands: async function() {
