@@ -101,10 +101,18 @@ const DS = {
             const res = await fetch(url, {
                 headers: { 'Authorization': `Bearer ${this.token}` }
             });
-            if (res.status === 401) { this.logout(); return null; }
+            if (res.status === 401) { 
+                console.error('[Discord API] 401 Unauthorized for', url);
+                this.logout(); 
+                return null; 
+            }
+            if (!res.ok) {
+                console.error('[Discord API] HTTP', res.status, 'for', url);
+                return null;
+            }
             return await res.json();
         } catch (e) {
-            console.error('[Discord API]', e);
+            console.error('[Discord API] Network error for', url, e);
             return null;
         }
     },
@@ -179,16 +187,21 @@ const DS = {
 
         // 1. Fetch user's guilds directly from Discord API (always works)
         const discordGuilds = await this.fetchDiscord("https://discord.com/api/v10/users/@me/guilds");
-        if (!discordGuilds) {
-            grid.innerHTML = `<p style="color:var(--text-muted);text-align:center;grid-column:1/-1;">Could not fetch your Discord servers.</p>`;
+        if (!discordGuilds || !Array.isArray(discordGuilds)) {
+            grid.innerHTML = `<p style="color:var(--text-muted);text-align:center;grid-column:1/-1;">Could not fetch your Discord servers. Try logging out and back in.</p>
+            <div style="text-align:center;grid-column:1/-1;margin-top:10px;"><button class="logout-btn" onclick="DS.logout()">Re-Login</button></div>`;
             return;
         }
+
+        console.log('[Dashboard] Got', discordGuilds.length, 'guilds from Discord');
 
         // 2. Filter to guilds where user has Administrator
         const adminGuilds = discordGuilds.filter(g => {
             const perms = BigInt(g.permissions);
             return (perms & 8n) === 8n; // ADMINISTRATOR
         });
+
+        console.log('[Dashboard]', adminGuilds.length, 'guilds with admin perms');
 
         // 3. Optionally check bot API to filter to guilds the bot is in
         const botData = await this.checkBotAPI();
