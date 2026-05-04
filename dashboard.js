@@ -594,19 +594,19 @@ const DS = {
             container.innerHTML = `
             <div class="stats-grid" style="margin-bottom:30px;">
                 <div class="stat-card">
-                    <div class="stat-value">${data.stats.cpu_usage}</div>
+                    <div class="stat-value">${data.stats.cpu_percent}%</div>
                     <div class="stat-label">CPU Usage</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${data.stats.ram_usage}</div>
+                    <div class="stat-value">${data.stats.memory_usage}</div>
                     <div class="stat-label">RAM Usage</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${data.stats.ping}</div>
+                    <div class="stat-value">${data.stats.latency_ms}ms</div>
                     <div class="stat-label">Latency</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${data.stats.uptime}</div>
+                    <div class="stat-value">${data.stats.uptime_formatted}</div>
                     <div class="stat-label">Uptime</div>
                 </div>
             </div>
@@ -748,30 +748,156 @@ const DS = {
                 </div>
             </div>`;
         }
-        else {
-            // Generic Read-Only Config View for auto_delete, auto_slowmode, format_enforcer, forum_moderator
-            const data = await this.fetchAPI(`/guild/${gid}/${key}`);
+        else if (key === 'auto_delete') {
+            const data = await this.fetchAPI(`/guild/${gid}/auto_delete`);
             if (!data) return;
-            
-            let html = `<div class="setting-card"><h3><i class="fas fa-cog"></i> Configuration Overview (Read-Only)</h3>`;
-            for(const [k, v] of Object.entries(data)) {
-                let valStr = '';
-                if(Array.isArray(v)) {
-                    valStr = `<div class="badge-list">` + v.map(x => `<span class="ds-badge">${typeof x === 'object' ? JSON.stringify(x) : x}</span>`).join('') + `</div>`;
-                } else if(typeof v === 'object' && v !== null) {
-                    valStr = `<div class="badge-list">` + Object.entries(v).map(([k2,v2]) => `<span class="ds-badge"><b>${k2}</b>: ${v2}</span>`).join('') + `</div>`;
-                } else {
-                    valStr = `<span class="setting-value">${v}</span>`;
-                }
-                
-                html += `
-                <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:6px;">
-                    <div class="setting-label" style="text-transform:capitalize;">${k.replace(/_/g, ' ')}</div>
-                    ${valStr}
-                </div>`;
-            }
-            html += `</div><p style="color:var(--text-muted);font-size:0.85rem;margin-top:10px;">These core system settings are currently hardcoded or managed via slash commands. Web configuration is planned.</p>`;
-            container.innerHTML = html;
+            container.innerHTML = `
+            <div class="setting-card">
+                <h3><i class="fas fa-trash-can"></i> Ticket Auto-Delete</h3>
+                <div class="setting-row">
+                    <div class="setting-label">Ticket Category<br><small>Category where tickets are created</small></div>
+                    ${this.generateChannelSelect('ad-category', data.ticket_category_id)}
+                </div>
+                <div class="setting-row">
+                    <div class="setting-label">Delete After (Days)<br><small>Inactivity threshold before deletion</small></div>
+                    <input type="number" id="ad-days" class="ds-input" value="${data.delete_after_days}" min="1">
+                </div>
+                <div class="setting-row" style="margin-top:20px;border-top:none;">
+                    <button class="btn-save" onclick="DS.saveAutoDelete()">Save Config</button>
+                </div>
+            </div>`;
+        }
+        else if (key === 'auto_slowmode') {
+            const data = await this.fetchAPI(`/guild/${gid}/auto_slowmode`);
+            if (!data) return;
+            let thresholdsText = data.thresholds.map(t => `${t.messages}:${t.slowmode}`).join(', ');
+            container.innerHTML = `
+            <div class="setting-card">
+                <h3><i class="fas fa-gauge-high"></i> Auto Slowmode Settings</h3>
+                <div class="setting-row">
+                    <div class="setting-label">Time Window (Seconds)<br><small>Window to count messages</small></div>
+                    <input type="number" id="asm-window" class="ds-input" value="${data.window_seconds}" min="1">
+                </div>
+                <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                    <div class="setting-label">Thresholds (Format: messages:slowmode, comma separated)</div>
+                    <input type="text" id="asm-thresholds" class="ds-input" value="${thresholdsText}" style="width:100%">
+                </div>
+                <div class="setting-row" style="margin-top:20px;border-top:none;">
+                    <button class="btn-save" onclick="DS.saveAutoSlowmode()">Save Config</button>
+                </div>
+            </div>`;
+        }
+        else if (key === 'format_enforcer') {
+            const data = await this.fetchAPI(`/guild/${gid}/format_enforcer`);
+            if (!data) return;
+            container.innerHTML = `
+            <div class="setting-card">
+                <h3><i class="fas fa-align-left"></i> Format Enforcer</h3>
+                <div class="setting-row">
+                    <div class="setting-label">Monitored Channel<br><small>Channel requiring strict format</small></div>
+                    ${this.generateChannelSelect('fe-ch', data.channel_id)}
+                </div>
+                <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                    <div class="setting-label">Required Headers (one per line)</div>
+                    <textarea id="fe-headers" class="ds-input" style="width:100%;height:80px;resize:vertical;">${data.required_headers.join('\n')}</textarea>
+                </div>
+                <div class="setting-row" style="margin-top:20px;border-top:none;">
+                    <button class="btn-save" onclick="DS.saveFormatEnforcer()">Save Config</button>
+                </div>
+            </div>`;
+        }
+        else if (key === 'forum_moderator') {
+            const data = await this.fetchAPI(`/guild/${gid}/forum_moderator`);
+            if (!data) return;
+            let tagsText = Object.entries(data.tag_descriptions).map(([k, v]) => `${k}|${v}`).join('\n');
+            container.innerHTML = `
+            <div class="setting-card">
+                <h3><i class="fas fa-comments"></i> Forum Moderator</h3>
+                <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                    <div class="setting-label">Drip Forum IDs (comma separated)</div>
+                    <input type="text" id="fm-drip" class="ds-input" value="${data.drip_forum_ids.join(', ')}" style="width:100%">
+                </div>
+                <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px; margin-top: 10px;">
+                    <div class="setting-label">Help Forum IDs (comma separated)</div>
+                    <input type="text" id="fm-help" class="ds-input" value="${data.help_forum_ids.join(', ')}" style="width:100%">
+                </div>
+                <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px; margin-top: 10px;">
+                    <div class="setting-label">Tag Descriptions (Format: TagName|Description, one per line)</div>
+                    <textarea id="fm-tags" class="ds-input" style="width:100%;height:120px;resize:vertical;">${tagsText}</textarea>
+                </div>
+                <div class="setting-row" style="margin-top:20px;border-top:none;">
+                    <button class="btn-save" onclick="DS.saveForumModerator()">Save Config</button>
+                </div>
+            </div>`;
+        }
+        else if (key === 'kos') {
+            const data = await this.fetchAPI(`/guild/${gid}/kos`);
+            if (!data) return;
+            container.innerHTML = `
+            <div class="setting-card">
+                <h3><i class="fas fa-crosshairs"></i> KOS System</h3>
+                <div class="setting-row">
+                    <div class="setting-label">Target KOS Channel<br><small>Where KOS entries are posted</small></div>
+                    ${this.generateChannelSelect('kos-ch', data.target_kos_channel_id)}
+                </div>
+                <p style="color:var(--text-muted);font-size:0.85rem;margin-top:16px;">This config is currently read-only.</p>
+            </div>`;
+        }
+        else if (key === 'koscheck') {
+            const data = await this.fetchAPI(`/guild/${gid}/koscheck`);
+            if (!data) return;
+            container.innerHTML = `
+            <div class="setting-card">
+                <h3><i class="fas fa-magnifying-glass"></i> KOS Check / Similarity Engine</h3>
+                <div class="setting-row">
+                    <div class="setting-label">Similarity Model<br><small>SentenceTransformer model used</small></div>
+                    <input type="text" class="ds-input" value="${data.similarity_model}" readonly>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-label">Similarity Threshold<br><small>Confidence required for a match</small></div>
+                    <input type="text" class="ds-input" value="${data.threshold}" readonly>
+                </div>
+                <p style="color:var(--text-muted);font-size:0.85rem;margin-top:16px;">This config is currently read-only.</p>
+            </div>`;
+        }
+        else if (key === 'deepwoken') {
+            const data = await this.fetchAPI(`/guild/${gid}/deepwoken`);
+            if (!data) return;
+            container.innerHTML = `
+            <div class="setting-card">
+                <h3><i class="fas fa-gamepad"></i> Build Tracker</h3>
+                <div class="setting-row">
+                    <div class="setting-label">Database Status</div>
+                    <span class="ds-badge" style="background:#00BF7F;color:#000;">${data.status}</span>
+                </div>
+                <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                    <div class="setting-label">Tracked Categories</div>
+                    <div class="badge-list">${data.tracked.map(c => `<span class="ds-badge">${c}</span>`).join('')}</div>
+                </div>
+                <p style="color:var(--text-muted);font-size:0.85rem;margin-top:16px;">This config is currently read-only.</p>
+            </div>`;
+        }
+        else if (key === 'commands') {
+            const data = await this.fetchAPI(`/guild/${gid}/commands`);
+            if (!data) return;
+            container.innerHTML = `
+            <div class="setting-card">
+                <h3><i class="fas fa-user-tag"></i> Role Commands</h3>
+                <div class="setting-row">
+                    <div class="setting-label">Ally Role<br><small>Required to bypass certain checks</small></div>
+                    ${this.generateRoleSelect('cmd-ally', data.ally_role_id)}
+                </div>
+                <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                    <div class="setting-label">Highrank Roles (comma separated IDs)<br><small>Allowed to use moderation commands</small></div>
+                    <input type="text" id="cmd-highranks" class="ds-input" value="${data.highrank_role_ids.join(', ')}" style="width:100%">
+                </div>
+                <div class="setting-row" style="margin-top:20px;border-top:none;">
+                    <button class="btn-save" onclick="DS.saveCommands()">Save Config</button>
+                </div>
+            </div>`;
+        }
+        else {
+            container.innerHTML = `<div class="setting-card"><p>No settings available for this module.</p></div>`;
         }
     },
 
@@ -847,6 +973,79 @@ const DS = {
             this.toast("Ally removed");
             this.renderPanel('allies');
         }
+    },
+    
+    saveAutoDelete: async function() {
+        const gid = this.currentGuild.id;
+        const body = {
+            ticket_category_id: document.getElementById('ad-category').value || null,
+            delete_after_days: parseInt(document.getElementById('ad-days').value) || 3
+        };
+        const res = await this.fetchAPI(`/guild/${gid}/auto_delete`, 'POST', body);
+        if (res && res.ok) this.toast("Auto-Delete config saved");
+    },
+    
+    saveAutoSlowmode: async function() {
+        const gid = this.currentGuild.id;
+        const windowSecs = parseInt(document.getElementById('asm-window').value) || 10;
+        const text = document.getElementById('asm-thresholds').value;
+        const thresholds = text.split(',').map(part => {
+            const [msgs, slow] = part.split(':');
+            return {messages: parseInt(msgs), slowmode: parseInt(slow)};
+        }).filter(t => !isNaN(t.messages) && !isNaN(t.slowmode));
+        
+        const body = {
+            window_seconds: windowSecs,
+            thresholds: thresholds
+        };
+        const res = await this.fetchAPI(`/guild/${gid}/auto_slowmode`, 'POST', body);
+        if (res && res.ok) this.toast("Auto-Slowmode config saved");
+    },
+    
+    saveFormatEnforcer: async function() {
+        const gid = this.currentGuild.id;
+        const text = document.getElementById('fe-headers').value;
+        const headers = text.split('\\n').map(l => l.trim()).filter(l => l);
+        const body = {
+            channel_id: document.getElementById('fe-ch').value || null,
+            required_headers: headers
+        };
+        const res = await this.fetchAPI(`/guild/${gid}/format_enforcer`, 'POST', body);
+        if (res && res.ok) this.toast("Format Enforcer config saved");
+    },
+    
+    saveForumModerator: async function() {
+        const gid = this.currentGuild.id;
+        const dripText = document.getElementById('fm-drip').value;
+        const helpText = document.getElementById('fm-help').value;
+        const tagsText = document.getElementById('fm-tags').value;
+        
+        const tagsObj = {};
+        tagsText.split('\\n').forEach(line => {
+            const parts = line.split('|');
+            if (parts.length >= 2) {
+                tagsObj[parts[0].trim()] = parts.slice(1).join('|').trim();
+            }
+        });
+        
+        const body = {
+            drip_forum_ids: dripText.split(',').map(s => s.trim()).filter(s => s),
+            help_forum_ids: helpText.split(',').map(s => s.trim()).filter(s => s),
+            tag_descriptions: tagsObj
+        };
+        const res = await this.fetchAPI(`/guild/${gid}/forum_moderator`, 'POST', body);
+        if (res && res.ok) this.toast("Forum Moderator config saved");
+    },
+    
+    saveCommands: async function() {
+        const gid = this.currentGuild.id;
+        const hrText = document.getElementById('cmd-highranks').value;
+        const body = {
+            ally_role_id: document.getElementById('cmd-ally').value || null,
+            highrank_role_ids: hrText.split(',').map(s => s.trim()).filter(s => s)
+        };
+        const res = await this.fetchAPI(`/guild/${gid}/commands`, 'POST', body);
+        if (res && res.ok) this.toast("Role Commands config saved");
     }
 };
 
