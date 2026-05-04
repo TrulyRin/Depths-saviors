@@ -1409,8 +1409,3 @@ const DS = {
 };
 
 window.DS = DS;
-mands config saved");
-    }
-};
-
-window.DS = DS;
