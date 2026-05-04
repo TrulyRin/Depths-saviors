@@ -509,7 +509,7 @@ const DS = {
                                         const missed = m.ganks_missed || 0;
                                         const total = attended + missed;
                                         const rate = total > 0 ? Math.round((attended / total) * 100) : 0;
-                                        let rateColor = rate >= 50 ? '#00BF7F' : (rate >= 20 ? '#E6A23C' : '#E63946');
+                                        let rateColor = rate > 50 ? '#00BF7F' : (rate > 20 ? '#E6A23C' : '#E63946');
                                         return `
                                             <tr>
                                                 <td>${m.guild_name}</td>
@@ -577,6 +577,7 @@ const DS = {
                         </div>
 
                         ${pendingHtml}
+                        ${analyticsHtml}
                         ${membersHtml}
                     </div>
                     `;
@@ -1380,118 +1381,3 @@ const DS = {
 };
 
 window.DS = DS;
-
-    const parts = line.split('|');
-            if (parts.length >= 2) {
-                tagsObj[parts[0].trim()] = parts.slice(1).join('|').trim();
-            }
-        });
-        
-        const body = {
-            drip_forum_ids: dripText.split(',').map(s => s.trim()).filter(s => s),
-            help_forum_ids: helpText.split(',').map(s => s.trim()).filter(s => s),
-            tag_descriptions: tagsObj
-        };
-        const res = await this.fetchAPI(`/guild/${gid}/forum_moderator`, 'POST', body);
-        if (res && res.ok) this.toast("Forum Moderator config saved");
-    },
-    
-    saveFaq: async function() {
-        const gid = this.currentGuild.id;
-        const entries = [];
-        const rows = document.querySelectorAll('.faq-row');
-        
-        rows.forEach(row => {
-            const q = row.querySelector('.faq-q-input').value.trim();
-            const a = row.querySelector('.faq-a-input').value.trim();
-            if (q && a) {
-                entries.push({ question: q, answer: a });
-            }
-        });
-        
-        const res = await this.fetchAPI(`/guild/${gid}/faq`, 'POST', { entries });
-        if (res && res.ok) this.toast("FAQ config saved");
-    },
-    
-    saveCommands: async function() {
-        const gid = this.currentGuild.id;
-        const hrText = document.getElementById('cmd-highranks').value;
-        const body = {
-            ally_role_id: document.getElementById('cmd-ally').value || null,
-            highrank_role_ids: hrText.split(',').map(s => s.trim()).filter(s => s)
-        };
-        const res = await this.fetchAPI(`/guild/${gid}/commands`, 'POST', body);
-        if (res && res.ok) this.toast("Role Commands config saved");
-    }
-};
-
-window.DS = DS;
-
-, answer: a });
-            }
-        });
-        
-        const res = await this.fetchAPI(`/guild/${gid}/faq`, 'POST', { entries });
-        if (res && res.ok) this.toast("FAQ config saved");
-    },
-    
-    saveCommands: async function() {
-        const gid = this.currentGuild.id;
-        const hrText = document.getElementById('cmd-highranks').value;
-        const body = {
-            ally_role_id: document.getElementById('cmd-ally').value || null,
-            highrank_role_ids: hrText.split(',').map(s => s.trim()).filter(s => s)
-        };
-        const res = await this.fetchAPI(`/guild/${gid}/commands`, 'POST', body);
-        if (res && res.ok) this.toast("Role Commands config saved");
-    }
-};
-
-window.DS = DS;
-
-    const parts = line.split('|');
-            if (parts.length >= 2) {
-                tagsObj[parts[0].trim()] = parts.slice(1).join('|').trim();
-            }
-        });
-        
-        const body = {
-            drip_forum_ids: dripText.split(',').map(s => s.trim()).filter(s => s),
-            help_forum_ids: helpText.split(',').map(s => s.trim()).filter(s => s),
-            tag_descriptions: tagsObj
-        };
-        const res = await this.fetchAPI(`/guild/${gid}/forum_moderator`, 'POST', body);
-        if (res && res.ok) this.toast("Forum Moderator config saved");
-    },
-    
-    saveFaq: async function() {
-        const gid = this.currentGuild.id;
-        const entries = [];
-        const rows = document.querySelectorAll('.faq-row');
-        
-        rows.forEach(row => {
-            const q = row.querySelector('.faq-q-input').value.trim();
-            const a = row.querySelector('.faq-a-input').value.trim();
-            if (q && a) {
-                entries.push({ question: q, answer: a });
-            }
-        });
-        
-        const res = await this.fetchAPI(`/guild/${gid}/faq`, 'POST', { entries });
-        if (res && res.ok) this.toast("FAQ config saved");
-    },
-    
-    saveCommands: async function() {
-        const gid = this.currentGuild.id;
-        const hrText = document.getElementById('cmd-highranks').value;
-        const body = {
-            ally_role_id: document.getElementById('cmd-ally').value || null,
-            highrank_role_ids: hrText.split(',').map(s => s.trim()).filter(s => s)
-        };
-        const res = await this.fetchAPI(`/guild/${gid}/commands`, 'POST', body);
-        if (res && res.ok) this.toast("Role Commands config saved");
-    }
-};
-
-window.DS = DS;
-
