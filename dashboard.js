@@ -640,10 +640,14 @@ const DS = {
                             </div>
                             </div>
 
-                            <div class="setting-card" style="margin-top:16px; border:1px solid ${isPro ? '#FFD700' : '#555'}; position: relative;">
-                            ${!isPro ? `<div style="position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.7); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:10; border-radius: 6px;">
-                                <i class="fas fa-lock" style="font-size:2rem; color:#FFD700; margin-bottom:10px;"></i>
-                                <p style="color:#fff; font-weight:bold;">Pro Plan Required for Custom Branding</p>
+                            <div class="setting-card" style="margin-top:16px; border:1px solid ${isPro ? '#FFD700' : '#555'}; position: relative; overflow: hidden;">
+                            ${!isPro ? `<div style="position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(15, 20, 25, 0.95); backdrop-filter: blur(4px); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:10;">
+                                <i class="fas fa-lock" style="font-size:2.5rem; color:#FFD700; margin-bottom:15px;"></i>
+                                <h3 style="color:#fff; margin-bottom:5px;">Pro Plan Required</h3>
+                                <p style="color:var(--text-muted); font-size: 0.85rem; margin-bottom:15px; text-align:center; max-width: 80%;">Unlock Custom Webhook Avatars and Names for a <b>$5 lifetime</b> plan!</p>
+                                <div style="display:flex; gap:10px;">
+                                    <a href="https://www.patreon.com/cw/Rinwoken/shop" target="_blank" class="btn-save" style="background:#E63946; text-decoration: none; padding: 8px 16px;"><i class="fas fa-crown"></i> Upgrade to Pro</a>
+                                </div>
                             </div>` : ''}
                             <h3 style="color:#FFD700;"><i class="fas fa-palette"></i> Custom Branding</h3>
                             <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">Make the bot look like it belongs to your server when it sends a ping in your channels.</p>
@@ -1401,6 +1405,11 @@ const DS = {
         };
         const res = await this.fetchAPI(`/guild/${gid}/commands`, 'POST', body);
         if (res && res.ok) this.toast("Role Commands config saved");
+    }
+};
+
+window.DS = DS;
+mands config saved");
     }
 };
 
