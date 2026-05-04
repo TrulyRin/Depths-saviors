@@ -846,18 +846,44 @@ const DS = {
         else if (key === 'faq') {
             const data = await this.fetchAPI(`/guild/${gid}/faq`);
             if (!data) return;
-            let faqText = data.entries.map(e => `${e.question} | ${e.answer}`).join('\n');
+            
+            window.removeFaqRow = function(btn) {
+                btn.closest('.faq-row').remove();
+            };
+            window.addFaqRow = function(q = '', a = '') {
+                const container = document.getElementById('faq-container');
+                const row = document.createElement('div');
+                row.className = 'faq-row';
+                row.style.cssText = 'display:flex; gap:10px; margin-bottom:10px; align-items:flex-start;';
+                row.innerHTML = `
+                    <input type="text" class="ds-input faq-q-input" placeholder="Trigger Question" value="${q.replace(/"/g, '&quot;')}" style="flex:1;">
+                    <textarea class="ds-input faq-a-input" placeholder="Response Answer..." style="flex:2; height:40px; resize:vertical;">${a}</textarea>
+                    <button class="btn-save" style="background:var(--danger); padding:10px;" onclick="removeFaqRow(this)"><i class="fas fa-trash"></i></button>
+                `;
+                container.appendChild(row);
+            };
+
             container.innerHTML = `
             <div class="setting-card">
                 <h3><i class="fas fa-circle-question"></i> AI FAQ System</h3>
-                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">The AI uses SentenceTransformers to detect similar questions. Format each entry on a new line like: <br><code>trigger question | the response text</code></p>
-                <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
-                    <textarea id="faq-entries" class="ds-input" style="width:100%;height:300px;resize:vertical;" placeholder="how to join | Make a ticket...">${faqText}</textarea>
-                </div>
-                <div class="setting-row" style="margin-top:20px;border-top:none;">
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">The AI uses SentenceTransformers to detect similar questions. Add trigger questions and their responses below.</p>
+                
+                <div id="faq-container" style="margin-bottom: 16px;"></div>
+                
+                <button class="btn-save" style="background:#555; margin-bottom: 20px;" onclick="addFaqRow()">+ Add FAQ Entry</button>
+                
+                <div class="setting-row" style="margin-top:20px;border-top:1px solid var(--border);padding-top:20px;">
                     <button class="btn-save" onclick="DS.saveFaq()">Save Config</button>
                 </div>
             </div>`;
+            
+            // Populate existing rows
+            setTimeout(() => {
+                data.entries.forEach(e => {
+                    window.addFaqRow(e.question, e.answer);
+                });
+                if (data.entries.length === 0) window.addFaqRow();
+            }, 50);
         }
         else if (key === 'tryout') {
             const data = await this.fetchAPI(`/guild/${gid}/tryout`);
@@ -1253,15 +1279,14 @@ const DS = {
     
     saveFaq: async function() {
         const gid = this.currentGuild.id;
-        const text = document.getElementById('faq-entries').value;
         const entries = [];
-        text.split('\\n').forEach(line => {
-            const parts = line.split('|');
-            if (parts.length >= 2) {
-                entries.push({
-                    question: parts[0].trim(),
-                    answer: parts.slice(1).join('|').trim()
-                });
+        const rows = document.querySelectorAll('.faq-row');
+        
+        rows.forEach(row => {
+            const q = row.querySelector('.faq-q-input').value.trim();
+            const a = row.querySelector('.faq-a-input').value.trim();
+            if (q && a) {
+                entries.push({ question: q, answer: a });
             }
         });
         
