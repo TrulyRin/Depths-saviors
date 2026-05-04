@@ -453,6 +453,7 @@ const DS = {
             let html = '';
             data.networks.forEach(net => {
                 const isEnabled = net.member ? net.member.enabled : false;
+                const autoNotify = net.member ? net.member.auto_notify : false;
                 
                 html += `
                 <div class="network-card">
@@ -479,22 +480,34 @@ const DS = {
                     <div class="setting-card">
                         <h3><i class="fas fa-sliders"></i> Notification Setup</h3>
                         
-                        <div class="setting-row">
-                            <div class="setting-label">Enable Notifications<br><small>Receive pings from this network</small></div>
-                            <div class="toggle ${isEnabled ? 'active' : ''}" id="gp-toggle-${net.network_id}" onclick="this.classList.toggle('active')"></div>
-                        </div>
-                        
-                        <div class="setting-row">
-                            <div class="setting-label">Target Channel<br><small>Where to post incoming pings</small></div>
-                            ${this.generateChannelSelect(`gp-ch-${net.network_id}`, net.member.channel_id)}
-                        </div>
-                        
-                        <div class="setting-row">
-                            <div class="setting-label">Ping Role<br><small>Role to mention on new ganks</small></div>
-                            ${this.generateRoleSelect(`gp-role-${net.network_id}`, net.member.ping_role_id)}
+                        <div class="split-columns">
+                            <div class="split-col">
+                                <div class="setting-row">
+                                    <div class="setting-label">Enable Notifications<br><small>Receive pings from this network</small></div>
+                                    <div class="toggle ${isEnabled ? 'active' : ''}" id="gp-toggle-${net.network_id}" onclick="this.classList.toggle('active')"></div>
+                                </div>
+                                <div class="setting-row">
+                                    <div class="setting-label">Auto Notify<br><small>Skip manual confirmation</small></div>
+                                    <div class="toggle ${autoNotify ? 'active' : ''}" id="gp-auto-${net.network_id}" onclick="this.classList.toggle('active')"></div>
+                                </div>
+                            </div>
+                            <div class="split-col">
+                                <div class="setting-row">
+                                    <div class="setting-label">Target Channel<br><small>Where to post incoming pings</small></div>
+                                    ${this.generateChannelSelect(`gp-ch-${net.network_id}`, net.member.channel_id)}
+                                </div>
+                                <div class="setting-row">
+                                    <div class="setting-label">Ping Role<br><small>Role to mention on new ganks</small></div>
+                                    ${this.generateRoleSelect(`gp-role-${net.network_id}`, net.member.ping_role_id)}
+                                </div>
+                                <div class="setting-row">
+                                    <div class="setting-label">Ally Role (Optional)<br><small>Role for recognized allies</small></div>
+                                    ${this.generateRoleSelect(`gp-ally-${net.network_id}`, net.member.ally_role_id)}
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="setting-row" style="margin-top:20px;">
+                        <div class="setting-row" style="margin-top:20px;border-top:none;">
                             <button class="btn-save" onclick="DS.saveGankPing('${net.network_id}')">Save Changes</button>
                         </div>
                     </div>
@@ -509,49 +522,52 @@ const DS = {
             const s = data.settings;
             
             container.innerHTML = `
-            <div class="setting-card">
-                <h3><i class="fas fa-shield-halved"></i> Verification Engine</h3>
-                
-                <div class="setting-row">
-                    <div class="setting-label">Enable Anti-Alt<br><small>Require new users to verify via website</small></div>
-                    <div class="toggle ${s.enabled ? 'active' : ''}" id="aa-enable" onclick="this.classList.toggle('active')"></div>
+            <div class="split-columns">
+                <div class="split-col">
+                    <div class="setting-card">
+                        <h3><i class="fas fa-shield-halved"></i> Verification Engine</h3>
+                        <div class="setting-row">
+                            <div class="setting-label">Enable Anti-Alt</div>
+                            <div class="toggle ${s.enabled ? 'active' : ''}" id="aa-enable" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-label">Verification Channel</div>
+                            ${this.generateChannelSelect('aa-vch', s.verify_channel_id)}
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-label">Security Log Channel</div>
+                            ${this.generateChannelSelect('aa-lch', s.log_channel_id)}
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-label">Verified Role</div>
+                            ${this.generateRoleSelect('aa-vrole', s.verified_role_id)}
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="setting-row">
-                    <div class="setting-label">Verification Channel<br><small>Where the Verify button is posted</small></div>
-                    ${this.generateChannelSelect('aa-vch', s.verify_channel_id)}
-                </div>
-
-                <div class="setting-row">
-                    <div class="setting-label">Security Log Channel<br><small>Logs VPNs, alt detections, failures</small></div>
-                    ${this.generateChannelSelect('aa-lch', s.log_channel_id)}
-                </div>
-                
-                <div class="setting-row">
-                    <div class="setting-label">Verified Role<br><small>Given upon successful verification</small></div>
-                    ${this.generateRoleSelect('aa-vrole', s.verified_role_id)}
+                <div class="split-col">
+                    <div class="setting-card">
+                        <h3><i class="fas fa-sliders"></i> Security Thresholds</h3>
+                        <div class="setting-row">
+                            <div class="setting-label">Min Account Age (Days)</div>
+                            <input type="number" id="aa-age" class="ds-input" value="${s.min_account_age_days}" min="0" max="365">
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-label">Suspect Risk Score</div>
+                            <input type="number" id="aa-suspect" class="ds-input" value="${s.risk_suspect_threshold}" min="0" max="100">
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-label">Auto-Ban Risk Score</div>
+                            <input type="number" id="aa-ban" class="ds-input" value="${s.risk_ban_threshold}" min="0" max="100">
+                        </div>
+                    </div>
                 </div>
             </div>
             
             <div class="setting-card">
-                <h3><i class="fas fa-sliders"></i> Security Thresholds</h3>
-                
-                <div class="setting-row">
-                    <div class="setting-label">Min Account Age (Days)<br><small>Accounts younger than this are flagged</small></div>
-                    <input type="number" id="aa-age" class="ds-input" value="${s.min_account_age_days}" min="0" max="365">
-                </div>
-                
-                <div class="setting-row">
-                    <div class="setting-label">Suspect Risk Score<br><small>Score required to flag for manual review (0-100)</small></div>
-                    <input type="number" id="aa-suspect" class="ds-input" value="${s.risk_suspect_threshold}" min="0" max="100">
-                </div>
-                
-                <div class="setting-row">
-                    <div class="setting-label">Auto-Ban Risk Score<br><small>Score required to instantly ban (0-100)</small></div>
-                    <input type="number" id="aa-ban" class="ds-input" value="${s.risk_ban_threshold}" min="0" max="100">
-                </div>
-                
-                <div class="setting-row" style="margin-top:20px;">
+                <h3><i class="fas fa-list-check"></i> Whitelist</h3>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:10px;">User IDs that bypass verification. Put each ID on a new line.</p>
+                <textarea id="aa-whitelist" class="ds-input" style="width:100%;height:100px;resize:vertical;font-family:monospace;">${(s.whitelist || []).join('\n')}</textarea>
+                <div class="setting-row" style="margin-top:20px;border-top:none;">
                     <button class="btn-save" onclick="DS.saveAntiAlt()">Save Anti-Alt Settings</button>
                 </div>
             </div>
@@ -583,25 +599,165 @@ const DS = {
             
             <div class="setting-card">
                 <h3><i class="fas fa-tv"></i> Live Stats Channel</h3>
-                
                 <div class="setting-row">
                     <div class="setting-label">Voice Channel<br><small>Channel name updates with live stats</small></div>
                     ${this.generateChannelSelect('bs-ch', data.stats_channel_id)}
                 </div>
-                
                 <div class="setting-row">
-                    <div class="setting-label">Update Interval (Minutes)<br><small>How often to rename the channel (Discord rate limit is 5m)</small></div>
+                    <div class="setting-label">Update Interval (Minutes)<br><small>How often to rename the channel</small></div>
                     <input type="number" id="bs-int" class="ds-input" value="${data.update_interval}" min="5">
                 </div>
-                
-                <div class="setting-row" style="margin-top:20px;">
+                <div class="setting-row" style="margin-top:20px;border-top:none;">
                     <button class="btn-save" onclick="DS.saveBotStats()">Save Config</button>
                 </div>
             </div>
             `;
         }
+        else if (key === 'points') {
+            const data = await this.fetchAPI(`/guild/${gid}/points`);
+            if (!data) return;
+            
+            const buildLbHtml = (entries) => {
+                if (!entries || entries.length === 0) return '<p style="color:var(--text-muted);font-size:0.9rem;padding:20px 0;">No data yet.</p>';
+                return entries.map((e, i) => `
+                    <div class="lb-entry">
+                        <div class="lb-rank">#${i+1}</div>
+                        ${e.avatar ? `<img src="${e.avatar}" class="lb-avatar">` : `<div class="lb-avatar" style="background:var(--primary-glow)"></div>`}
+                        <div class="lb-name">${e.name}</div>
+                        <div class="lb-pts">${e.points} pts</div>
+                    </div>
+                `).join('');
+            };
+
+            container.innerHTML = `
+            <div class="setting-card" style="margin-bottom:20px;">
+                <p>Last Reset: <strong>${data.last_reset || 'Never'}</strong></p>
+            </div>
+            <div class="split-columns">
+                <div class="split-col">
+                    <div class="setting-card">
+                        <h3><i class="fas fa-calendar-alt"></i> Monthly Leaderboard</h3>
+                        <div style="margin-top:16px;">${buildLbHtml(data.monthly)}</div>
+                    </div>
+                </div>
+                <div class="split-col">
+                    <div class="setting-card">
+                        <h3><i class="fas fa-globe"></i> Global Leaderboard</h3>
+                        <div style="margin-top:16px;">${buildLbHtml(data.global)}</div>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+        else if (key === 'allies') {
+            const data = await this.fetchAPI(`/guild/${gid}/allies`);
+            if (!data) return;
+            
+            let tableHtml = '<table class="ds-table"><tr><th>Ally Name</th><th>Power</th><th>Review Notes</th><th>Actions</th></tr>';
+            data.allies.forEach(a => {
+                let pBars = '';
+                for(let i=0; i<5; i++) pBars += `<span class="${i < a.power ? 'filled' : ''}"></span>`;
+                
+                tableHtml += `
+                <tr>
+                    <td>${a.name}</td>
+                    <td><div class="power-bar">${pBars}</div></td>
+                    <td><span style="font-size:0.85rem;color:var(--text-muted);">${a.review || 'No notes'}</span></td>
+                    <td>
+                        <button class="remove-btn" style="background:none;border:none;color:#E63946;cursor:pointer;" onclick="DS.removeAlly('${a.name}')"><i class="fas fa-trash-can"></i> Remove</button>
+                    </td>
+                </tr>`;
+            });
+            tableHtml += '</table>';
+            
+            if(data.allies.length === 0) {
+                tableHtml = '<p style="color:var(--text-muted);margin:20px 0;">No allies registered yet.</p>';
+            }
+
+            container.innerHTML = `
+            <div class="setting-card">
+                <h3><i class="fas fa-handshake"></i> Current Allies</h3>
+                ${tableHtml}
+            </div>
+            <div class="setting-card">
+                <h3><i class="fas fa-plus"></i> Add New Ally</h3>
+                <div class="split-columns" style="gap:16px; margin-top:16px;">
+                    <input type="text" id="ally-name" class="ds-input" placeholder="Ally Name / Guild" style="flex:1;">
+                    <select id="ally-power" class="ds-select" style="width:120px;min-width:120px;">
+                        <option value="1">Power: 1</option>
+                        <option value="2">Power: 2</option>
+                        <option value="3">Power: 3</option>
+                        <option value="4">Power: 4</option>
+                        <option value="5">Power: 5</option>
+                    </select>
+                </div>
+                <input type="text" id="ally-review" class="ds-input" placeholder="Review notes (optional)" style="width:100%; margin-top:10px;">
+                <button class="btn-save" style="margin-top:16px;" onclick="DS.addAlly()">Add Ally</button>
+            </div>
+            `;
+        }
+        else if (key === 'faq') {
+            const data = await this.fetchAPI(`/guild/${gid}/faq`);
+            if (!data) return;
+            let html = '<div class="setting-card">';
+            data.entries.forEach(e => {
+                html += `
+                <div class="faq-entry">
+                    <div class="faq-q">${e.question}</div>
+                    <div class="faq-a">${e.answer}</div>
+                </div>`;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        else if (key === 'tryout') {
+            const data = await this.fetchAPI(`/guild/${gid}/tryout`);
+            if (!data) return;
+            let locs = '';
+            for(const [id, name] of Object.entries(data.locations)) {
+                locs += `<span class="ds-badge">${name}</span>`;
+            }
+            container.innerHTML = `
+            <div class="setting-card">
+                <h3><i class="fas fa-clipboard-check"></i> Tryout Settings (Read-Only)</h3>
+                <div class="setting-row">
+                    <div class="setting-label">Tryout Category</div>
+                    <div class="setting-value">ID: ${data.category_id}</div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-label">Questions per tryout</div>
+                    <div class="setting-value">${data.questions_per_tryout}</div>
+                </div>
+                <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                    <div class="setting-label">Available Locations</div>
+                    <div class="badge-list">${locs}</div>
+                </div>
+            </div>`;
+        }
         else {
-            container.innerHTML = `<div class="setting-card"><p>Configuration panel for <strong>${key}</strong> is under construction via Web Dashboard API.</p><p style="color:var(--text-muted);font-size:0.85rem;margin-top:10px;">Use Discord slash commands to manage these settings in the meantime.</p></div>`;
+            // Generic Read-Only Config View for auto_delete, auto_slowmode, format_enforcer, forum_moderator
+            const data = await this.fetchAPI(`/guild/${gid}/${key}`);
+            if (!data) return;
+            
+            let html = `<div class="setting-card"><h3><i class="fas fa-cog"></i> Configuration Overview (Read-Only)</h3>`;
+            for(const [k, v] of Object.entries(data)) {
+                let valStr = '';
+                if(Array.isArray(v)) {
+                    valStr = `<div class="badge-list">` + v.map(x => `<span class="ds-badge">${typeof x === 'object' ? JSON.stringify(x) : x}</span>`).join('') + `</div>`;
+                } else if(typeof v === 'object' && v !== null) {
+                    valStr = `<div class="badge-list">` + Object.entries(v).map(([k2,v2]) => `<span class="ds-badge"><b>${k2}</b>: ${v2}</span>`).join('') + `</div>`;
+                } else {
+                    valStr = `<span class="setting-value">${v}</span>`;
+                }
+                
+                html += `
+                <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:6px;">
+                    <div class="setting-label" style="text-transform:capitalize;">${k.replace(/_/g, ' ')}</div>
+                    ${valStr}
+                </div>`;
+            }
+            html += `</div><p style="color:var(--text-muted);font-size:0.85rem;margin-top:10px;">These core system settings are currently hardcoded or managed via slash commands. Web configuration is planned.</p>`;
+            container.innerHTML = html;
         }
     },
 
@@ -612,8 +768,10 @@ const DS = {
         const body = {
             network_id: netId,
             enabled: document.getElementById(`gp-toggle-${netId}`).classList.contains('active'),
+            auto_notify: document.getElementById(`gp-auto-${netId}`).classList.contains('active'),
             channel_id: document.getElementById(`gp-ch-${netId}`).value || null,
-            ping_role_id: document.getElementById(`gp-role-${netId}`).value || null
+            ping_role_id: document.getElementById(`gp-role-${netId}`).value || null,
+            ally_role_id: document.getElementById(`gp-ally-${netId}`).value || null
         };
         const res = await this.fetchAPI(`/guild/${gid}/gankping`, 'POST', body);
         if (res && res.ok) this.toast("GankPing settings saved");
@@ -621,6 +779,9 @@ const DS = {
 
     saveAntiAlt: async function() {
         const gid = this.currentGuild.id;
+        const wlText = document.getElementById('aa-whitelist').value;
+        const whitelist = wlText.split('\n').map(s => s.trim()).filter(s => s);
+        
         const body = {
             enabled: document.getElementById(`aa-enable`).classList.contains('active'),
             verify_channel_id: document.getElementById(`aa-vch`).value || null,
@@ -629,6 +790,7 @@ const DS = {
             min_account_age_days: parseInt(document.getElementById(`aa-age`).value),
             risk_suspect_threshold: parseInt(document.getElementById(`aa-suspect`).value),
             risk_ban_threshold: parseInt(document.getElementById(`aa-ban`).value),
+            whitelist: whitelist
         };
         const res = await this.fetchAPI(`/guild/${gid}/antialt`, 'POST', body);
         if (res && res.ok) this.toast("Anti-Alt settings saved");
@@ -642,7 +804,37 @@ const DS = {
         };
         const res = await this.fetchAPI(`/guild/${gid}/botstats`, 'POST', body);
         if (res && res.ok) this.toast("BotStats config saved");
+    },
+    
+    addAlly: async function() {
+        const gid = this.currentGuild.id;
+        const name = document.getElementById('ally-name').value.trim();
+        const power = parseInt(document.getElementById('ally-power').value);
+        const review = document.getElementById('ally-review').value.trim();
+        
+        if(!name) { this.toast("Ally name required", "error"); return; }
+        
+        const res = await this.fetchAPI(`/guild/${gid}/allies`, 'POST', {
+            action: 'add', name, power, review
+        });
+        if (res && res.ok) {
+            this.toast("Ally added successfully");
+            this.renderPanel('allies'); // Refresh table
+        }
+    },
+    
+    removeAlly: async function(name) {
+        if(!confirm(`Remove ally ${name}?`)) return;
+        const gid = this.currentGuild.id;
+        const res = await this.fetchAPI(`/guild/${gid}/allies`, 'POST', {
+            action: 'remove', name
+        });
+        if (res && res.ok) {
+            this.toast("Ally removed");
+            this.renderPanel('allies');
+        }
     }
 };
 
 window.DS = DS;
+
