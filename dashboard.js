@@ -666,6 +666,24 @@ const DS = {
                                     </div>
                                 </div>
                             </div>
+                            <div class="split-columns">
+                                <div class="split-col">
+                                    <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                                        <div class="setting-label">Embed Title</div>
+                                        <input type="text" id="gp-embed-title-${net.network_id}" class="ds-input" style="width:100%" placeholder="Leave empty for GANK ALERT" value="${net.member?.custom_embed_title || ''}">
+                                    </div>
+                                    <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                                        <div class="setting-label">Embed Accent Color</div>
+                                        <input type="text" id="gp-embed-color-${net.network_id}" class="ds-input" style="width:100%" placeholder="#E63946" value="${net.member?.custom_embed_color || ''}">
+                                    </div>
+                                </div>
+                                <div class="split-col">
+                                    <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                                        <div class="setting-label">Embed Thumbnail URL</div>
+                                        <input type="text" id="gp-embed-thumb-${net.network_id}" class="ds-input" style="width:100%" placeholder="Leave empty for Network Icon" value="${net.member?.custom_embed_thumbnail || ''}">
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="setting-row" style="margin-top:20px;border-top:none;">
                                 <button class="btn-save" onclick="DS.saveGankPing('${net.network_id}')">Save Branding Options</button>
@@ -1146,6 +1164,12 @@ const DS = {
             if (brandName) body.custom_bot_name = brandName.value;
             const brandAvatar = document.getElementById(`gp-brand-avatar-${netId}`);
             if (brandAvatar) body.custom_bot_avatar = brandAvatar.value;
+            const embedTitle = document.getElementById(`gp-embed-title-${netId}`);
+            if (embedTitle) body.custom_embed_title = embedTitle.value;
+            const embedColor = document.getElementById(`gp-embed-color-${netId}`);
+            if (embedColor) body.custom_embed_color = embedColor.value;
+            const embedThumb = document.getElementById(`gp-embed-thumb-${netId}`);
+            if (embedThumb) body.custom_embed_thumbnail = embedThumb.value;
         }
 
         const res = await this.fetchAPI(`/guild/${gid}/gankping`, 'POST', body);
