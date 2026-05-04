@@ -465,9 +465,92 @@ const DS = {
             if (!data) return;
             
             let myNetworksHtml = '';
-            let availableNetworksHtml = '';
             
             data.networks.forEach(net => {
+                let adminHtml = '';
+                if (net.is_owner) {
+                    let pendingHtml = '';
+                    if (net.pending_applicants && net.pending_applicants.length > 0) {
+                        pendingHtml = `
+                            <h4 style="margin-top:20px;margin-bottom:10px;"><i class="fas fa-user-clock"></i> Pending Applicants</h4>
+                            <div style="background:var(--bg);border-radius:6px;padding:10px;">
+                                ${net.pending_applicants.map(app => `
+                                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+                                        <div>
+                                            <strong>${app.guild_name}</strong> (ID: ${app.guild_id})<br>
+                                            <small style="color:var(--text-muted)">Requested by ${app.requested_by}</small>
+                                        </div>
+                                        <div>
+                                            <button class="btn-save" style="padding:4px 8px;font-size:0.8rem;" onclick="DS.adminAccept('${net.network_id}', '${app.guild_id}')">Accept</button>
+                                            <button class="btn-save" style="padding:4px 8px;font-size:0.8rem;background:var(--danger);" onclick="DS.adminReject('${net.network_id}', '${app.guild_id}')">Reject</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+                    
+                    let membersHtml = '';
+                    if (net.all_members && net.all_members.length > 0) {
+                        membersHtml = `
+                            <h4 style="margin-top:20px;margin-bottom:10px;"><i class="fas fa-users"></i> Network Members</h4>
+                            <div style="background:var(--bg);border-radius:6px;padding:10px;max-height:200px;overflow-y:auto;">
+                                ${net.all_members.map(m => `
+                                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+                                        <div>
+                                            <strong>${m.guild_name}</strong> (ID: ${m.guild_id})
+                                        </div>
+                                        <div>
+                                            <button class="btn-save" style="padding:4px 8px;font-size:0.8rem;background:var(--danger);" onclick="DS.adminKick('${net.network_id}', '${m.guild_id}')">Kick</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    } else {
+                        membersHtml = `<p style="color:var(--text-muted);font-size:0.85rem;margin-top:10px;">No other members in this network yet.</p>`;
+                    }
+
+                    adminHtml = `
+                    <div class="setting-card" style="margin-top:16px;border:1px solid var(--primary);">
+                        <h3 style="color:var(--primary);"><i class="fas fa-crown"></i> Network Administration</h3>
+                        
+                        <div class="split-columns">
+                            <div class="split-col">
+                                <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                                    <div class="setting-label">Network Name</div>
+                                    <input type="text" id="admin-name-${net.network_id}" class="ds-input" style="width:100%" value="${net.name}">
+                                </div>
+                                <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                                    <div class="setting-label">Icon URL</div>
+                                    <input type="text" id="admin-icon-${net.network_id}" class="ds-input" style="width:100%" value="${net.icon_url || ''}">
+                                </div>
+                                <div class="setting-row">
+                                    <div class="setting-label">Requires Approval<br><small>Manually approve joins</small></div>
+                                    <div class="toggle ${net.requires_approval ? 'active' : ''}" id="admin-req-${net.network_id}" onclick="this.classList.toggle('active')"></div>
+                                </div>
+                            </div>
+                            <div class="split-col">
+                                <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                                    <div class="setting-label">Description</div>
+                                    <textarea id="admin-desc-${net.network_id}" class="ds-input" style="width:100%;height:80px;resize:vertical;">${net.description || ''}</textarea>
+                                </div>
+                                <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                                    <div class="setting-label">Max Members</div>
+                                    <input type="number" id="admin-max-${net.network_id}" class="ds-input" style="width:100%" value="${net.max_members}" min="2">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="setting-row" style="margin-top:10px;border-top:none;">
+                            <button class="btn-save" onclick="DS.adminEditNetwork('${net.network_id}')">Save Network Details</button>
+                        </div>
+
+                        ${pendingHtml}
+                        ${membersHtml}
+                    </div>
+                    `;
+                }
+
                 if (net.is_member) {
                     const isEnabled = net.member ? net.member.enabled : false;
                     const autoNotify = net.member ? net.member.auto_notify : false;
@@ -477,8 +560,8 @@ const DS = {
                         <div class="net-header">
                             ${net.icon_url ? `<img src="${net.icon_url}" class="net-icon">` : ''}
                             <div>
-                                <div class="net-name">${net.name} ${net.is_owner ? '<span class="net-badge">Owner</span>' : ''}</div>
-                                <div class="net-id">Network ID: ${net.network_id} • ${net.member_count} guilds</div>
+                                <div class="net-name">${net.name} ${net.is_owner ? '<span class="net-badge" style="background:var(--primary);color:#000;">Owner</span>' : ''}</div>
+                                <div class="net-id">Network ID: ${net.network_id} • ${net.member_count}/${net.max_members} guilds</div>
                             </div>
                         </div>
                         
@@ -495,7 +578,6 @@ const DS = {
                         
                         <div class="setting-card" style="margin-top:16px;">
                             <h3><i class="fas fa-sliders"></i> Notification Setup</h3>
-                            
                             <div class="split-columns">
                                 <div class="split-col">
                                     <div class="setting-row">
@@ -522,74 +604,63 @@ const DS = {
                                     </div>
                                 </div>
                             </div>
-
                             <div class="setting-row" style="margin-top:20px;border-top:none;">
-                                <button class="btn-save" onclick="DS.saveGankPing('${net.network_id}')">Save Changes</button>
+                                <button class="btn-save" onclick="DS.saveGankPing('${net.network_id}')">Save Setup</button>
                             </div>
                         </div>
+                        ${adminHtml}
                     </div>`;
-                } else {
-                    const btnState = net.is_pending 
-                        ? `<button class="btn-save" style="background:#555;cursor:not-allowed;" disabled>Pending Approval</button>`
-                        : `<button class="btn-save" onclick="DS.joinNetwork('${net.network_id}')">Request to Join</button>`;
-                        
-                    availableNetworksHtml += `
-                    <div class="network-card" style="display:flex; justify-content:space-between; align-items:center;">
+                } else if (net.is_pending) {
+                    myNetworksHtml += `
+                    <div class="network-card" style="opacity: 0.8;">
                         <div class="net-header" style="margin-bottom:0;">
                             ${net.icon_url ? `<img src="${net.icon_url}" class="net-icon">` : ''}
                             <div>
-                                <div class="net-name">${net.name}</div>
-                                <div class="net-id">ID: ${net.network_id} • ${net.member_count} members</div>
-                                <div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px;">${net.description || 'No description provided.'}</div>
+                                <div class="net-name">${net.name} <span class="net-badge" style="background:#555;color:#fff;">Pending Approval</span></div>
+                                <div class="net-id">ID: ${net.network_id}</div>
                             </div>
-                        </div>
-                        <div>
-                            ${btnState}
                         </div>
                     </div>`;
                 }
             });
             
-            if (!myNetworksHtml) myNetworksHtml = `<p style="color:var(--text-muted);margin-bottom:20px;">This server is not a part of any gank networks yet. Join or create one below!</p>`;
-            if (!availableNetworksHtml) availableNetworksHtml = `<p style="color:var(--text-muted);margin-bottom:20px;">No public networks available to join.</p>`;
-
-            const createHtml = `
-            <div class="setting-card" style="margin-top:40px;">
-                <h3><i class="fas fa-plus-circle"></i> Create New Network</h3>
-                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">Create a new gankping network. Only server Administrators can manage the network settings in Discord.</p>
-                <div class="split-columns">
-                    <div class="split-col">
-                        <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
-                            <div class="setting-label">Network ID (lowercase, no spaces, 3-32 chars)</div>
-                            <input type="text" id="gp-create-id" class="ds-input" style="width:100%" placeholder="e.g. my-awesome-guild">
-                        </div>
-                        <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
-                            <div class="setting-label">Display Name</div>
-                            <input type="text" id="gp-create-name" class="ds-input" style="width:100%" placeholder="e.g. Awesome Guild Pings">
-                        </div>
-                    </div>
-                    <div class="split-col">
-                        <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
-                            <div class="setting-label">Description (optional)</div>
-                            <textarea id="gp-create-desc" class="ds-input" style="width:100%;height:100px;resize:vertical;" placeholder="A brief description of this network..."></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="setting-row" style="margin-top:20px;border-top:none;">
-                    <button class="btn-save" onclick="DS.createNetwork()">Create Network</button>
-                </div>
-            </div>`;
+            if (!myNetworksHtml) myNetworksHtml = `<p style="color:var(--text-muted);margin-bottom:20px;">This server is not a part of any gank networks yet.</p>`;
 
             container.innerHTML = `
                 <div style="margin-bottom:40px;">
                     <h3><i class="fas fa-network-wired"></i> My Networks</h3>
                     <div style="margin-top:16px;">${myNetworksHtml}</div>
                 </div>
-                <div style="margin-bottom:20px;">
-                    <h3><i class="fas fa-globe"></i> Available Networks</h3>
-                    <div style="margin-top:16px;">${availableNetworksHtml}</div>
+
+                <div class="split-columns" style="margin-top:40px; align-items: stretch;">
+                    <div class="setting-card split-col" style="margin-top:0;">
+                        <h3><i class="fas fa-sign-in-alt"></i> Join Network</h3>
+                        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">Enter the private ID of a network to send a join request.</p>
+                        <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                            <div class="setting-label">Network ID</div>
+                            <input type="text" id="gp-join-id" class="ds-input" style="width:100%" placeholder="network-id-here">
+                        </div>
+                        <div class="setting-row" style="margin-top:20px;border-top:none;">
+                            <button class="btn-save" onclick="DS.joinNetworkById()">Join Network</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-card split-col" style="margin-top:0;">
+                        <h3><i class="fas fa-plus-circle"></i> Create Network</h3>
+                        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">Create a new gankping network to manage your own coalition.</p>
+                        <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                            <div class="setting-label">Network ID (3-32 chars)</div>
+                            <input type="text" id="gp-create-id" class="ds-input" style="width:100%" placeholder="e.g. my-awesome-guild">
+                        </div>
+                        <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                            <div class="setting-label">Display Name</div>
+                            <input type="text" id="gp-create-name" class="ds-input" style="width:100%" placeholder="e.g. Awesome Guild Pings">
+                        </div>
+                        <div class="setting-row" style="margin-top:20px;border-top:none;">
+                            <button class="btn-save" onclick="DS.createNetwork()">Create Network</button>
+                        </div>
+                    </div>
                 </div>
-                ${createHtml}
             `;
         }
         else if (key === 'antialt') {
@@ -981,7 +1052,10 @@ const DS = {
         if (res && res.ok) this.toast("GankPing settings saved");
     },
     
-    joinNetwork: async function(netId) {
+    joinNetworkById: async function() {
+        const netId = document.getElementById('gp-join-id').value.trim();
+        if (!netId) return this.toast("Please enter a Network ID", "error");
+        
         if (!confirm(`Request to join network ${netId}?`)) return;
         const gid = this.currentGuild.id;
         const res = await this.fetchAPI(`/guild/${gid}/gankping/join`, 'POST', { network_id: netId });
@@ -995,7 +1069,6 @@ const DS = {
         const gid = this.currentGuild.id;
         const netId = document.getElementById('gp-create-id').value.trim();
         const name = document.getElementById('gp-create-name').value.trim();
-        const desc = document.getElementById('gp-create-desc').value.trim();
         
         if (!netId || !name) {
             this.toast("Network ID and Name are required", "error");
@@ -1004,11 +1077,56 @@ const DS = {
         
         const res = await this.fetchAPI(`/guild/${gid}/gankping/create`, 'POST', {
             network_id: netId,
-            name: name,
-            description: desc
+            name: name
         });
         if (res && res.ok) {
             this.toast("Network created successfully!");
+            this.renderPanel('gankping');
+        }
+    },
+
+    adminEditNetwork: async function(netId) {
+        const gid = this.currentGuild.id;
+        const body = {
+            network_id: netId,
+            action: 'edit_network',
+            name: document.getElementById(`admin-name-${netId}`).value.trim(),
+            description: document.getElementById(`admin-desc-${netId}`).value.trim(),
+            icon_url: document.getElementById(`admin-icon-${netId}`).value.trim(),
+            requires_approval: document.getElementById(`admin-req-${netId}`).classList.contains('active'),
+            max_members: document.getElementById(`admin-max-${netId}`).value
+        };
+        const res = await this.fetchAPI(`/guild/${gid}/gankping/admin`, 'POST', body);
+        if (res && res.ok) {
+            this.toast("Network details saved!");
+            this.renderPanel('gankping');
+        }
+    },
+
+    adminAccept: async function(netId, targetGid) {
+        const gid = this.currentGuild.id;
+        const res = await this.fetchAPI(`/guild/${gid}/gankping/admin`, 'POST', { network_id: netId, action: 'accept_applicant', target_gid: targetGid });
+        if (res && res.ok) {
+            this.toast("Applicant accepted");
+            this.renderPanel('gankping');
+        }
+    },
+
+    adminReject: async function(netId, targetGid) {
+        const gid = this.currentGuild.id;
+        const res = await this.fetchAPI(`/guild/${gid}/gankping/admin`, 'POST', { network_id: netId, action: 'reject_applicant', target_gid: targetGid });
+        if (res && res.ok) {
+            this.toast("Applicant rejected");
+            this.renderPanel('gankping');
+        }
+    },
+
+    adminKick: async function(netId, targetGid) {
+        if (!confirm("Are you sure you want to kick this guild from the network?")) return;
+        const gid = this.currentGuild.id;
+        const res = await this.fetchAPI(`/guild/${gid}/gankping/admin`, 'POST', { network_id: netId, action: 'kick_member', target_gid: targetGid });
+        if (res && res.ok) {
+            this.toast("Member kicked from network");
             this.renderPanel('gankping');
         }
     },
