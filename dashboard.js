@@ -531,9 +531,9 @@ const DS = {
                                         <div>
                                             <strong>${m.guild_name}</strong> (ID: ${m.guild_id})
                                         </div>
-                                        <div>
-                                            <button class="btn-save" style="padding:4px 8px;font-size:0.8rem;background:var(--danger);" onclick="DS.adminKick('${net.network_id}', '${m.guild_id}')">Kick</button>
-                                        </div>
+                                            <div>
+                                                ${m.is_owner ? '<span class="net-badge" style="background:var(--primary);color:#000;">Owner</span>' : `<button class="btn-save" style="padding:4px 8px;font-size:0.8rem;background:var(--danger);" onclick="DS.adminKick('${net.network_id}', '${m.guild_id}')">Kick</button>`}
+                                            </div>
                                     </div>
                                 `).join('')}
                             </div>
