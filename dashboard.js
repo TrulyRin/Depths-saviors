@@ -464,6 +464,8 @@ const DS = {
             const data = await this.fetchAPI(`/guild/${gid}/gankping`);
             if (!data) return;
             
+            const isPro = data.is_pro || false;
+            
             let myNetworksHtml = '';
             
             data.networks.forEach(net => {
@@ -491,7 +493,36 @@ const DS = {
                     }
                     
                     let membersHtml = '';
+                    let analyticsHtml = '';
                     if (net.all_members && net.all_members.length > 0) {
+                        analyticsHtml = `
+                            <h4 style="margin-top:20px;margin-bottom:10px;"><i class="fas fa-chart-pie"></i> Detailed Gank Analytics (Pro)</h4>
+                            <div style="background:var(--bg);border-radius:6px;padding:10px;max-height:300px;overflow-y:auto; border: 1px solid ${isPro ? '#FFD700' : '#555'}; position: relative;">
+                                ${!isPro ? `<div style="position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.7); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:10;">
+                                    <i class="fas fa-lock" style="font-size:2rem; color:#FFD700; margin-bottom:10px;"></i>
+                                    <p style="color:#fff; font-weight:bold;">Pro Plan Required</p>
+                                </div>` : ''}
+                                <table class="ds-table" style="width:100%; text-align:left;">
+                                    <tr><th>Guild</th><th>Attended</th><th>Missed</th><th>Response Rate</th></tr>
+                                    ${net.all_members.map(m => {
+                                        const attended = m.ganks_attended || 0;
+                                        const missed = m.ganks_missed || 0;
+                                        const total = attended + missed;
+                                        const rate = total > 0 ? Math.round((attended / total) * 100) : 0;
+                                        let rateColor = rate >= 50 ? '#00BF7F' : (rate >= 20 ? '#E6A23C' : '#E63946');
+                                        return `
+                                            <tr>
+                                                <td>${m.guild_name}</td>
+                                                <td style="color:#00BF7F;">${attended}</td>
+                                                <td style="color:#E63946;">${missed}</td>
+                                                <td style="color:${rateColor}; font-weight:bold;">${rate}%</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </table>
+                            </div>
+                        `;
+
                         membersHtml = `
                             <h4 style="margin-top:20px;margin-bottom:10px;"><i class="fas fa-users"></i> Network Members</h4>
                             <div style="background:var(--bg);border-radius:6px;padding:10px;max-height:200px;overflow-y:auto;">
@@ -603,12 +634,44 @@ const DS = {
                                         ${this.generateRoleSelect(`gp-ally-${net.network_id}`, net.member.ally_role_id)}
                                     </div>
                                 </div>
-                            </div>
                             <div class="setting-row" style="margin-top:20px;border-top:none;">
-                                <button class="btn-save" onclick="DS.saveGankPing('${net.network_id}')">Save Setup</button>
+                                <button class="btn-save" onclick="DS.saveGankPing('${net.network_id}')">Save Notification Setup</button>
                             </div>
-                        </div>
-                        ${adminHtml}
+                            </div>
+
+                            <div class="setting-card" style="margin-top:16px; border:1px solid ${isPro ? '#FFD700' : '#555'}; position: relative;">
+                            ${!isPro ? `<div style="position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.7); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:10; border-radius: 6px;">
+                                <i class="fas fa-lock" style="font-size:2rem; color:#FFD700; margin-bottom:10px;"></i>
+                                <p style="color:#fff; font-weight:bold;">Pro Plan Required for Custom Branding</p>
+                            </div>` : ''}
+                            <h3 style="color:#FFD700;"><i class="fas fa-palette"></i> Custom Branding</h3>
+                            <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">Make the bot look like it belongs to your server when it sends a ping in your channels.</p>
+
+                            <div class="setting-row">
+                                <div class="setting-label">Enable Custom Branding<br><small>Uses webhooks to change bot appearance</small></div>
+                                <div class="toggle ${net.member?.use_custom_branding ? 'active' : ''}" id="gp-brand-toggle-${net.network_id}" onclick="if(${isPro}) this.classList.toggle('active')"></div>
+                            </div>
+                            <div class="split-columns">
+                                <div class="split-col">
+                                    <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                                        <div class="setting-label">Custom Bot Name</div>
+                                        <input type="text" id="gp-brand-name-${net.network_id}" class="ds-input" style="width:100%" placeholder="Leave empty for Server Name" value="${net.member?.custom_bot_name || ''}">
+                                    </div>
+                                </div>
+                                <div class="split-col">
+                                    <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                                        <div class="setting-label">Custom Avatar URL</div>
+                                        <input type="text" id="gp-brand-avatar-${net.network_id}" class="ds-input" style="width:100%" placeholder="Leave empty for Server Icon" value="${net.member?.custom_bot_avatar || ''}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="setting-row" style="margin-top:20px;border-top:none;">
+                                <button class="btn-save" onclick="DS.saveGankPing('${net.network_id}')">Save Branding Options</button>
+                            </div>
+                            </div>
+
+                            ${adminHtml}
                     </div>`;
                 } else if (net.is_pending) {
                     myNetworksHtml += `
@@ -1074,6 +1137,16 @@ const DS = {
             ping_role_id: document.getElementById(`gp-role-${netId}`).value || null,
             ally_role_id: document.getElementById(`gp-ally-${netId}`).value || null
         };
+        
+        const brandToggle = document.getElementById(`gp-brand-toggle-${netId}`);
+        if (brandToggle) {
+            body.use_custom_branding = brandToggle.classList.contains('active');
+            const brandName = document.getElementById(`gp-brand-name-${netId}`);
+            if (brandName) body.custom_bot_name = brandName.value;
+            const brandAvatar = document.getElementById(`gp-brand-avatar-${netId}`);
+            if (brandAvatar) body.custom_bot_avatar = brandAvatar.value;
+        }
+
         const res = await this.fetchAPI(`/guild/${gid}/gankping`, 'POST', body);
         if (res && res.ok) this.toast("GankPing settings saved");
     },
@@ -1263,6 +1336,120 @@ const DS = {
         const tagsObj = {};
         tagsText.split('\\n').forEach(line => {
             const parts = line.split('|');
+            if (parts.length >= 2) {
+                tagsObj[parts[0].trim()] = parts.slice(1).join('|').trim();
+            }
+        });
+        
+        const body = {
+            drip_forum_ids: dripText.split(',').map(s => s.trim()).filter(s => s),
+            help_forum_ids: helpText.split(',').map(s => s.trim()).filter(s => s),
+            tag_descriptions: tagsObj
+        };
+        const res = await this.fetchAPI(`/guild/${gid}/forum_moderator`, 'POST', body);
+        if (res && res.ok) this.toast("Forum Moderator config saved");
+    },
+    
+    saveFaq: async function() {
+        const gid = this.currentGuild.id;
+        const entries = [];
+        const rows = document.querySelectorAll('.faq-row');
+        
+        rows.forEach(row => {
+            const q = row.querySelector('.faq-q-input').value.trim();
+            const a = row.querySelector('.faq-a-input').value.trim();
+            if (q && a) {
+                entries.push({ question: q, answer: a });
+            }
+        });
+        
+        const res = await this.fetchAPI(`/guild/${gid}/faq`, 'POST', { entries });
+        if (res && res.ok) this.toast("FAQ config saved");
+    },
+    
+    saveCommands: async function() {
+        const gid = this.currentGuild.id;
+        const hrText = document.getElementById('cmd-highranks').value;
+        const body = {
+            ally_role_id: document.getElementById('cmd-ally').value || null,
+            highrank_role_ids: hrText.split(',').map(s => s.trim()).filter(s => s)
+        };
+        const res = await this.fetchAPI(`/guild/${gid}/commands`, 'POST', body);
+        if (res && res.ok) this.toast("Role Commands config saved");
+    }
+};
+
+window.DS = DS;
+
+    const parts = line.split('|');
+            if (parts.length >= 2) {
+                tagsObj[parts[0].trim()] = parts.slice(1).join('|').trim();
+            }
+        });
+        
+        const body = {
+            drip_forum_ids: dripText.split(',').map(s => s.trim()).filter(s => s),
+            help_forum_ids: helpText.split(',').map(s => s.trim()).filter(s => s),
+            tag_descriptions: tagsObj
+        };
+        const res = await this.fetchAPI(`/guild/${gid}/forum_moderator`, 'POST', body);
+        if (res && res.ok) this.toast("Forum Moderator config saved");
+    },
+    
+    saveFaq: async function() {
+        const gid = this.currentGuild.id;
+        const entries = [];
+        const rows = document.querySelectorAll('.faq-row');
+        
+        rows.forEach(row => {
+            const q = row.querySelector('.faq-q-input').value.trim();
+            const a = row.querySelector('.faq-a-input').value.trim();
+            if (q && a) {
+                entries.push({ question: q, answer: a });
+            }
+        });
+        
+        const res = await this.fetchAPI(`/guild/${gid}/faq`, 'POST', { entries });
+        if (res && res.ok) this.toast("FAQ config saved");
+    },
+    
+    saveCommands: async function() {
+        const gid = this.currentGuild.id;
+        const hrText = document.getElementById('cmd-highranks').value;
+        const body = {
+            ally_role_id: document.getElementById('cmd-ally').value || null,
+            highrank_role_ids: hrText.split(',').map(s => s.trim()).filter(s => s)
+        };
+        const res = await this.fetchAPI(`/guild/${gid}/commands`, 'POST', body);
+        if (res && res.ok) this.toast("Role Commands config saved");
+    }
+};
+
+window.DS = DS;
+
+, answer: a });
+            }
+        });
+        
+        const res = await this.fetchAPI(`/guild/${gid}/faq`, 'POST', { entries });
+        if (res && res.ok) this.toast("FAQ config saved");
+    },
+    
+    saveCommands: async function() {
+        const gid = this.currentGuild.id;
+        const hrText = document.getElementById('cmd-highranks').value;
+        const body = {
+            ally_role_id: document.getElementById('cmd-ally').value || null,
+            highrank_role_ids: hrText.split(',').map(s => s.trim()).filter(s => s)
+        };
+        const res = await this.fetchAPI(`/guild/${gid}/commands`, 'POST', body);
+        if (res && res.ok) this.toast("Role Commands config saved");
+    }
+};
+
+window.DS = DS;
+
+    const parts = line.split('|');
             if (parts.length >= 2) {
                 tagsObj[parts[0].trim()] = parts.slice(1).join('|').trim();
             }
