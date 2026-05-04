@@ -1,8 +1,41 @@
 /**
  * Dashboard Application Logic
+ * API_BASE: Set via localStorage key 'ds_api_url', or defaults below.
+ * To configure: open browser console and run:
+ *   localStorage.setItem('ds_api_url', 'http://YOUR_VPS_IP:8080/api')
  */
 
-const API_BASE = "https://api.deepsaviors.xyz/api"; // Needs reverse proxy setup
+function getApiBase() {
+    const stored = localStorage.getItem('ds_api_url');
+    if (stored) return stored;
+    // Auto-detect: if accessing from localhost, use local API
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+        return 'http://localhost:8080/api';
+    }
+    // Production default — update this when you have a reverse proxy
+    return 'https://api.deepsaviors.xyz/api';
+}
+
+const PRIVATE_GUILD_ID = "1305511241577529354";
+
+// Cog metadata used client-side when bot API is unreachable
+const COG_REGISTRY = {
+    gankping:         { name: "Gank Notifications",     icon: "fa-bullhorn",         scope: "global"  },
+    antialt:          { name: "Anti-Alt Verification",   icon: "fa-shield-halved",    scope: "private" },
+    points:           { name: "Points System",           icon: "fa-chart-line",       scope: "private" },
+    allies:           { name: "Ally Management",         icon: "fa-handshake",        scope: "private" },
+    auto_delete:      { name: "Ticket Auto-Delete",      icon: "fa-trash-can",        scope: "private" },
+    auto_slowmode:    { name: "Auto Slowmode",           icon: "fa-gauge-high",       scope: "private" },
+    botstats:         { name: "Bot Statistics",           icon: "fa-chart-bar",        scope: "private" },
+    format_enforcer:  { name: "Format Enforcer",         icon: "fa-align-left",       scope: "private" },
+    forum_moderator:  { name: "Forum Moderator",         icon: "fa-comments",         scope: "private" },
+    faq:              { name: "FAQ System",               icon: "fa-circle-question",  scope: "private" },
+    deepwoken:        { name: "Build Tracker",            icon: "fa-gamepad",          scope: "private" },
+    tryout:           { name: "Tryout System",            icon: "fa-clipboard-check",  scope: "private" },
+    kos:              { name: "KOS System",               icon: "fa-crosshairs",       scope: "private" },
+    koscheck:         { name: "KOS Check",                icon: "fa-magnifying-glass", scope: "private" },
+    commands:         { name: "Role Commands",            icon: "fa-user-tag",         scope: "private" },
+};
 
 const DS = {
     token: null,
@@ -10,7 +43,9 @@ const DS = {
     currentGuild: null,
     channels: [],
     roles: [],
-    
+    apiBase: getApiBase(),
+    botApiOnline: false,
+
     // Discord OAuth Config
     clientId: "1373795045529878560",
     redirectUri: "https://www.deepsaviors.xyz/callback",
@@ -69,7 +104,7 @@ const DS = {
             if (res.status === 401) { this.logout(); return null; }
             return await res.json();
         } catch (e) {
-            console.error(e);
+            console.error('[Discord API]', e);
             return null;
         }
     },
@@ -84,19 +119,31 @@ const DS = {
                 opts.headers['Content-Type'] = 'application/json';
                 opts.body = JSON.stringify(body);
             }
-            const res = await fetch(API_BASE + endpoint, opts);
+            const res = await fetch(this.apiBase + endpoint, opts);
             if (res.status === 401 || res.status === 403) {
-                this.toast("Session expired or permission denied", "error");
-                this.logout(); 
+                this.toast("Permission denied for this action", "error");
                 return null;
             }
             if (!res.ok) throw new Error(await res.text());
+            this.botApiOnline = true;
             return await res.json();
         } catch (e) {
-            console.error(e);
-            this.toast(e.message, "error");
+            console.error('[Bot API]', e);
             return null;
         }
+    },
+
+    /** Quick connectivity check to the bot API */
+    checkBotAPI: async function() {
+        try {
+            const res = await fetch(this.apiBase + '/bot/guilds', {
+                headers: { 'Authorization': `Bearer ${this.token}` },
+                signal: AbortSignal.timeout(4000)
+            });
+            if (res.ok) { this.botApiOnline = true; return await res.json(); }
+        } catch (e) { /* unreachable */ }
+        this.botApiOnline = false;
+        return null;
     },
 
     toast: function(msg, type="success") {
@@ -130,39 +177,52 @@ const DS = {
         const grid = document.getElementById('server-grid');
         grid.innerHTML = `<div class="skeleton" style="height:120px;grid-column:1/-1;"></div>`;
 
-        // Get bot guilds (needs to be from our API because Discord OAuth only gives us user guilds)
-        // Wait, implicit OAuth doesn't let us see WHICH of the user's guilds the bot is in unless we ask our API.
-        const res = await this.fetchAPI("/bot/guilds");
-        if (!res || !res.guilds) {
-            grid.innerHTML = `<p style="color:var(--text-muted);text-align:center;grid-column:1/-1;">Could not fetch server list.</p>`;
+        // 1. Fetch user's guilds directly from Discord API (always works)
+        const discordGuilds = await this.fetchDiscord("https://discord.com/api/v10/users/@me/guilds");
+        if (!discordGuilds) {
+            grid.innerHTML = `<p style="color:var(--text-muted);text-align:center;grid-column:1/-1;">Could not fetch your Discord servers.</p>`;
             return;
         }
 
-        const discordGuilds = await this.fetchDiscord("https://discord.com/api/v10/users/@me/guilds");
-        if (!discordGuilds) return;
-
-        // Find intersection where user has MANAGE_GUILD and bot is in
-        const botGuildIds = new Set(res.guilds.map(g => g.id));
+        // 2. Filter to guilds where user has Administrator
         const adminGuilds = discordGuilds.filter(g => {
             const perms = BigInt(g.permissions);
-            const manageGuild = (perms & 32n) === 32n;
-            const admin = (perms & 8n) === 8n;
-            return (manageGuild || admin) && botGuildIds.has(g.id);
+            return (perms & 8n) === 8n; // ADMINISTRATOR
         });
 
-        if (adminGuilds.length === 0) {
+        // 3. Optionally check bot API to filter to guilds the bot is in
+        const botData = await this.checkBotAPI();
+        let displayGuilds = adminGuilds;
+
+        if (botData && botData.guilds) {
+            // Bot API is reachable — only show guilds the bot is also in
+            const botGuildIds = new Set(botData.guilds.map(g => g.id));
+            displayGuilds = adminGuilds.filter(g => botGuildIds.has(g.id));
+        }
+        // If bot API is down, show all admin guilds (management will show error per-guild)
+
+        if (displayGuilds.length === 0) {
             grid.innerHTML = `<div style="text-align:center;grid-column:1/-1;padding:40px;">
-                <p>No manageable servers found where the bot is present.</p>
-                <a href="/joinds" style="color:var(--primary);margin-top:10px;display:inline-block;">Invite Bot</a>
+                <p style="margin-bottom:12px;">No manageable servers found${this.botApiOnline ? ' where the bot is present' : ''}.</p>
+                ${!this.botApiOnline ? '<p style="color:#E6A23C;font-size:0.85rem;margin-bottom:12px;"><i class="fas fa-exclamation-triangle"></i> Bot API is offline — showing all admin servers. Connect your bot API to filter.</p>' : ''}
+                <a href="/joinds" style="color:var(--primary);">Invite Bot</a>
             </div>`;
             return;
         }
 
+        if (!this.botApiOnline) {
+            grid.insertAdjacentHTML('beforebegin', 
+                `<div style="text-align:center;padding:10px 20px;margin-bottom:10px;">
+                    <p style="color:#E6A23C;font-size:0.85rem;"><i class="fas fa-exclamation-triangle"></i> Bot API not connected — showing all your admin servers. Settings management requires the bot to be running.</p>
+                    <p style="color:var(--text-muted);font-size:0.8rem;margin-top:4px;">API URL: <code>${this.apiBase}</code> · To change: <code>localStorage.setItem('ds_api_url','http://YOUR_IP:8080/api')</code></p>
+                </div>`);
+        }
+
         grid.innerHTML = '';
-        adminGuilds.forEach(g => {
+        displayGuilds.forEach(g => {
             const card = document.createElement('div');
             card.className = 'server-card';
-            card.onclick = () => this.loadGuild(g.id);
+            card.onclick = () => this.loadGuild(g.id, g);
             
             const iconHtml = g.icon 
                 ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png" class="server-icon">`
@@ -171,7 +231,7 @@ const DS = {
             card.innerHTML = `
                 ${iconHtml}
                 <h3>${g.name}</h3>
-                <span class="member-count">Manage Settings</span>
+                <span class="member-count">${this.botApiOnline ? 'Manage Settings' : 'View Server'}</span>
             `;
             grid.appendChild(card);
         });
@@ -179,29 +239,59 @@ const DS = {
 
     // ── Guild Dashboard ─────────────────────────────────
 
-    loadGuild: async function(guildId) {
+    loadGuild: async function(guildId, discordGuild) {
         document.getElementById('view-servers').style.display = 'none';
         document.getElementById('view-dashboard').style.display = 'flex';
-        
+
+        // Try to get overview from bot API
         const res = await this.fetchAPI(`/guild/${guildId}/overview`);
-        if (!res) { this.showServers(); return; }
-        
-        this.currentGuild = res.guild;
-        
+
+        let guildInfo, cogs, isPrivate;
+
+        if (res) {
+            // Bot API available — use full data
+            guildInfo = res.guild;
+            cogs = res.cogs;
+            isPrivate = res.is_private;
+        } else {
+            // Bot API unavailable — use Discord data + client-side cog registry
+            guildInfo = {
+                id: discordGuild ? discordGuild.id : guildId,
+                name: discordGuild ? discordGuild.name : `Server ${guildId}`,
+                icon: discordGuild && discordGuild.icon 
+                    ? `https://cdn.discordapp.com/icons/${guildId}/${discordGuild.icon}.png` 
+                    : null,
+            };
+            isPrivate = guildId === PRIVATE_GUILD_ID;
+            cogs = {};
+            for (const [key, meta] of Object.entries(COG_REGISTRY)) {
+                if (meta.scope === "global" || isPrivate) {
+                    cogs[key] = meta;
+                }
+            }
+        }
+
+        this.currentGuild = guildInfo;
+
         // Setup Sidebar header
         const sbGuild = document.getElementById('sidebar-guild');
-        const iconHtml = this.currentGuild.icon 
-            ? `<img src="${this.currentGuild.icon}">` 
-            : `<div style="width:36px;height:36px;border-radius:10px;background:var(--primary-glow);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:bold;">${this.currentGuild.name.charAt(0)}</div>`;
+        const iconHtml = guildInfo.icon 
+            ? `<img src="${guildInfo.icon}">` 
+            : `<div style="width:36px;height:36px;border-radius:10px;background:var(--primary-glow);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:bold;">${guildInfo.name.charAt(0)}</div>`;
             
-        sbGuild.innerHTML = `<i class="fas fa-chevron-left back-arrow"></i> ${iconHtml} <span>${this.currentGuild.name}</span>`;
+        sbGuild.innerHTML = `<i class="fas fa-chevron-left back-arrow"></i> ${iconHtml} <span>${guildInfo.name}</span>`;
         sbGuild.onclick = () => this.showServers();
 
-        // Load reference data
-        const channelsRes = await this.fetchAPI(`/guild/${guildId}/channels`);
-        this.channels = channelsRes ? channelsRes.channels : [];
-        const rolesRes = await this.fetchAPI(`/guild/${guildId}/roles`);
-        this.roles = rolesRes ? rolesRes.roles : [];
+        // Load reference data (channels & roles) from bot API if available
+        if (this.botApiOnline) {
+            const channelsRes = await this.fetchAPI(`/guild/${guildId}/channels`);
+            this.channels = channelsRes ? channelsRes.channels : [];
+            const rolesRes = await this.fetchAPI(`/guild/${guildId}/roles`);
+            this.roles = rolesRes ? rolesRes.roles : [];
+        } else {
+            this.channels = [];
+            this.roles = [];
+        }
 
         // Build Nav and Panels
         const nav = document.getElementById('cog-nav');
@@ -209,8 +299,20 @@ const DS = {
         nav.innerHTML = '';
         content.innerHTML = '';
 
+        // Show connection warning if bot API is down
+        if (!this.botApiOnline) {
+            content.innerHTML = `
+                <div class="setting-card" style="border-color:#E6A23C;margin-bottom:20px;">
+                    <h3 style="color:#E6A23C;"><i class="fas fa-exclamation-triangle"></i> Bot API Not Connected</h3>
+                    <p style="color:var(--text-muted);margin-top:8px;">The bot's API server is not reachable. Settings panels are shown but cannot load or save data until the bot is running and accessible.</p>
+                    <p style="color:var(--text-muted);font-size:0.85rem;margin-top:8px;">Current API URL: <code>${this.apiBase}</code></p>
+                    <p style="color:var(--text-muted);font-size:0.85rem;margin-top:4px;">To set your API URL, open browser console and run: <code>localStorage.setItem('ds_api_url', 'http://YOUR_IP:8080/api')</code></p>
+                </div>
+            `;
+        }
+
         let first = true;
-        for (const [key, meta] of Object.entries(res.cogs)) {
+        for (const [key, meta] of Object.entries(cogs)) {
             // Nav Item
             const a = document.createElement('div');
             a.className = `cog-nav-item ${first ? 'active' : ''}`;
