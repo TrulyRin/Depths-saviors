@@ -419,9 +419,23 @@ const DS = {
     generateChannelSelect: function(id, selectedId) {
         let html = `<select id="${id}" class="ds-select"><option value="">-- None --</option>`;
         this.channels.forEach(c => {
-            if (c.type === "0" || c.type === "5") { // text or news
-                const sel = c.id === selectedId ? 'selected' : '';
+            const typeStr = String(c.type);
+            if (typeStr === "0" || typeStr === "5" || typeStr === "text" || typeStr === "news") {
+                const sel = String(c.id) === String(selectedId) ? 'selected' : '';
                 html += `<option value="${c.id}" ${sel}>#${c.name}</option>`;
+            }
+        });
+        html += `</select>`;
+        return html;
+    },
+
+    generateVoiceSelect: function(id, selectedId) {
+        let html = `<select id="${id}" class="ds-select"><option value="">-- None --</option>`;
+        this.channels.forEach(c => {
+            const typeStr = String(c.type);
+            if (typeStr === "2" || typeStr === "voice") {
+                const sel = String(c.id) === String(selectedId) ? 'selected' : '';
+                html += `<option value="${c.id}" ${sel}>🔊 ${c.name}</option>`;
             }
         });
         html += `</select>`;
@@ -432,7 +446,7 @@ const DS = {
         let html = `<select id="${id}" class="ds-select"><option value="">-- None --</option>`;
         this.roles.forEach(r => {
             if (r.name !== "@everyone") {
-                const sel = r.id === selectedId ? 'selected' : '';
+                const sel = String(r.id) === String(selectedId) ? 'selected' : '';
                 html += `<option value="${r.id}" ${sel}>@${r.name}</option>`;
             }
         });
@@ -601,7 +615,7 @@ const DS = {
                 <h3><i class="fas fa-tv"></i> Live Stats Channel</h3>
                 <div class="setting-row">
                     <div class="setting-label">Voice Channel<br><small>Channel name updates with live stats</small></div>
-                    ${this.generateChannelSelect('bs-ch', data.stats_channel_id)}
+                    ${this.generateVoiceSelect('bs-ch', data.stats_channel_id)}
                 </div>
                 <div class="setting-row">
                     <div class="setting-label">Update Interval (Minutes)<br><small>How often to rename the channel</small></div>
