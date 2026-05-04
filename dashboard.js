@@ -1347,7 +1347,7 @@ const DS = {
     saveFormatEnforcer: async function() {
         const gid = this.currentGuild.id;
         const text = document.getElementById('fe-headers').value;
-        const headers = text.split('\\n').map(l => l.trim()).filter(l => l);
+        const headers = text.split('\n').map(l => l.trim()).filter(l => l);
         const body = {
             channel_id: document.getElementById('fe-ch').value || null,
             required_headers: headers
@@ -1363,7 +1363,7 @@ const DS = {
         const tagsText = document.getElementById('fm-tags').value;
         
         const tagsObj = {};
-        tagsText.split('\\n').forEach(line => {
+        tagsText.split('\n').forEach(line => {
             const parts = line.split('|');
             if (parts.length >= 2) {
                 tagsObj[parts[0].trim()] = parts.slice(1).join('|').trim();
