@@ -78,12 +78,40 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <script>
-        const WEBHOOK_URL = "WEBHOOK_URL_REDACTED";
-        const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token');
-        const guildId = urlParams.get('guild');
-        const userId = urlParams.get('user');
-        const sig = urlParams.get('sig');
+        const API_URL = "https://api.deepsaviors.xyz/api/verify";
+        const CLIENT_ID = "1373795045529878560";
+        const REDIRECT_URI = "https://www.deepsaviors.xyz/verify";
+
+        let token, guildId, userId, sig;
+        let discordToken = null;
+
+        function parseParams() {
+            // Try query string first
+            const urlParams = new URLSearchParams(window.location.search);
+            token = urlParams.get('token');
+            guildId = urlParams.get('guild');
+            userId = urlParams.get('user');
+            sig = urlParams.get('sig');
+
+            // Parse from hash if returning from Discord OAuth
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                const hashParams = new URLSearchParams(hash);
+                discordToken = hashParams.get('access_token');
+                const state = hashParams.get('state');
+                
+                if (state) {
+                    const stateParams = new URLSearchParams(decodeURIComponent(state));
+                    if (stateParams.get('token')) token = stateParams.get('token');
+                    if (stateParams.get('guild')) guildId = stateParams.get('guild');
+                    if (stateParams.get('user')) userId = stateParams.get('user');
+                    if (stateParams.get('sig')) sig = stateParams.get('sig');
+                    
+                    // Clean URL to hide token, restore original query params
+                    window.history.replaceState(null, null, window.location.pathname + decodeURIComponent(state));
+                }
+            }
+        }
 
         const btn = document.getElementById('verifyBtn');
         const btnText = document.getElementById('btnText');
@@ -198,6 +226,8 @@
         }
 
         async function init() {
+            parseParams();
+            
             particlesJS("particles-js", {
                 particles: { number:{value:40,density:{enable:true,value_area:800}}, color:{value:"#07ac93"}, shape:{type:"circle"}, opacity:{value:0.3,random:true}, size:{value:3,random:true}, line_linked:{enable:true,distance:150,color:"#07ac93",opacity:0.2,width:1}, move:{enable:true,speed:1,direction:"none",random:true,out_mode:"out"} },
                 interactivity: { detect_on:"canvas", events:{onhover:{enable:true,mode:"grab"},onclick:{enable:false},resize:true}, modes:{grab:{distance:140,line_linked:{opacity:0.5}}} },
@@ -211,16 +241,24 @@
                 btn.style.display = 'none';
                 return;
             }
-            if (WEBHOOK_URL.includes("YOUR_WEBHOOK")) {
-                showError("System not configured.");
-                btn.style.display = 'none';
-                return;
-            }
             if (localStorage.getItem(`verified_${token}`)) {
                 showSuccess();
                 return;
             }
 
+            if (!discordToken) {
+                btn.disabled = false;
+                btnText.innerText = "Login with Discord";
+                shieldIcon.className = "fab fa-discord verify-shield";
+                btn.onclick = () => {
+                    const stateStr = encodeURIComponent(window.location.search);
+                    const oauthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=identify&state=${stateStr}`;
+                    window.location.href = oauthUrl;
+                };
+                return;
+            }
+
+            btn.onclick = verify;
             let countdown = 3;
             btnText.innerText = `Please wait ${countdown}s...`;
             const timer = setInterval(() => {
@@ -264,36 +302,19 @@
                 btnText.innerText = "Submitting...";
 
                 const payload = {
-                    username: "Depths Saviors Security",
-                    avatar_url: "https://cdn.discordapp.com/icons/1305511241577529354/a_4fed118f11cec184cd86e27a540119bd.gif",
-                    embeds: [{
-                        title: "🔐 Verification Attempt",
-                        color: 0x07ac93,
-                        fields: [
-                            { name: "Token", value: token, inline: true },
-                            { name: "User ID", value: userId, inline: true },
-                            { name: "Guild ID", value: guildId, inline: true },
-                            { name: "Signature", value: sig, inline: false },
-                            { name: "Fingerprint", value: fp.hash, inline: false },
-                            { name: "FP Method", value: fp.method, inline: true },
-                            { name: "Fallback Hash", value: fp.fallbackHash.substring(0, 32) + "...", inline: true },
-                            { name: "Nonce", value: nonce, inline: true },
-                            { name: "User Agent", value: browserMeta.userAgent, inline: false },
-                            { name: "Timezone", value: browserMeta.timezone, inline: true },
-                            { name: "Screen", value: browserMeta.screen, inline: true },
-                            { name: "Platform", value: browserMeta.platform, inline: true },
-                            { name: "Language", value: browserMeta.language, inline: true },
-                            { name: "Color Depth", value: browserMeta.colorDepth, inline: true },
-                            { name: "Touch Support", value: browserMeta.touch, inline: true },
-                            { name: "CPU Cores", value: browserMeta.hardwareConcurrency, inline: true },
-                            { name: "Device Memory", value: browserMeta.deviceMemory + " GB", inline: true }
-                        ],
-                        timestamp: new Date().toISOString(),
-                        footer: { text: "Depths Saviors Anti-Alt System | Secured" }
-                    }]
+                    token: token,
+                    userId: userId,
+                    guildId: guildId,
+                    sig: sig,
+                    discordToken: discordToken,
+                    fingerprint: fp.hash,
+                    fpMethod: fp.method,
+                    fallbackHash: fp.fallbackHash,
+                    nonce: nonce,
+                    browserMeta: browserMeta
                 };
 
-                const response = await fetch(WEBHOOK_URL, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
