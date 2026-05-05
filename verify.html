@@ -338,7 +338,8 @@
                     throw new Error("Rate limited. Please wait a moment and try again.");
                 }
                 if (!response.ok) {
-                    throw new Error(`Server error (${response.status}). Try again.`);
+                    const errText = await response.text();
+                    throw new Error(errText || `Server error (${response.status}). Try again.`);
                 }
 
                 localStorage.setItem(`verified_${token}`, "true");
