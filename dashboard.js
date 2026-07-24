@@ -502,9 +502,19 @@ const DS = {
                                     <i class="fas fa-lock" style="font-size:2rem; color:#FFD700; margin-bottom:10px;"></i>
                                     <p style="color:#fff; font-weight:bold;">Pro Plan Required</p>
                                 </div>` : ''}
-                                <table class="ds-table" style="width:100%; text-align:left;">
+                                <table class="ds-table" style="width:100%; text-align:left; ${!isPro ? 'filter: blur(5px); user-select:none; pointer-events:none;' : ''}">
                                     <tr><th>Guild</th><th>Attended</th><th>Missed</th><th>Response Rate</th></tr>
-                                    ${net.all_members.map(m => {
+                                    ${net.all_members.map((m, i) => {
+                                        if (!isPro) {
+                                            return `
+                                            <tr>
+                                                <td>Guild ${i + 1}</td>
+                                                <td style="color:#00BF7F;">??</td>
+                                                <td style="color:#E63946;">??</td>
+                                                <td style="color:#E6A23C; font-weight:bold;">??%</td>
+                                            </tr>
+                                            `;
+                                        }
                                         const attended = m.ganks_attended || 0;
                                         const missed = m.ganks_missed || 0;
                                         const total = attended + missed;
