@@ -21,6 +21,12 @@ const PRIVATE_GUILD_ID = "1305511241577529354";
 // Cog metadata used client-side when bot API is unreachable
 const COG_REGISTRY = {
     gankping:         { name: "Gank Notifications",     icon: "fa-bullhorn",         scope: "global"  },
+    public_setup:     { name: "Server Setup",            icon: "fa-wand-magic-sparkles", scope: "public"  },
+    moderation:       { name: "Moderation & AutoMod",    icon: "fa-shield-halved",   scope: "public"  },
+    tickets:          { name: "Tickets",                 icon: "fa-ticket",          scope: "public"  },
+    sticky_slowmode:  { name: "Sticky & Slowmode",       icon: "fa-thumbtack",       scope: "public"  },
+    standard_antialt: { name: "Standard Anti-Alt",       icon: "fa-user-shield",     scope: "public"  },
+    local_kos:        { name: "Local KOS",               icon: "fa-crosshairs",      scope: "public"  },
     antialt:          { name: "Anti-Alt Verification",   icon: "fa-shield-halved",    scope: "private" },
     points:           { name: "Points System",           icon: "fa-chart-line",       scope: "private" },
     allies:           { name: "Ally Management",         icon: "fa-handshake",        scope: "private" },
@@ -29,7 +35,7 @@ const COG_REGISTRY = {
     botstats:         { name: "Bot Statistics",           icon: "fa-chart-bar",        scope: "private" },
     format_enforcer:  { name: "Format Enforcer",         icon: "fa-align-left",       scope: "private" },
     forum_moderator:  { name: "Forum Moderator",         icon: "fa-comments",         scope: "private" },
-    faq:              { name: "FAQ System",               icon: "fa-circle-question",  scope: "private" },
+    faq:              { name: "FAQ & Questions",          icon: "fa-circle-question",  scope: "global"  },
     deepwoken:        { name: "Build Tracker",            icon: "fa-gamepad",          scope: "private" },
     tryout:           { name: "Tryout System",            icon: "fa-clipboard-check",  scope: "private" },
     kos:              { name: "KOS System",               icon: "fa-crosshairs",       scope: "private" },
@@ -38,25 +44,15 @@ const COG_REGISTRY = {
 };
 
 const DS = {
-    token: null,
     user: null,
+    csrfToken: null,
     currentGuild: null,
     channels: [],
     roles: [],
     apiBase: getApiBase(),
     botApiOnline: false,
 
-    // Discord OAuth Config
-    clientId: "1373795045529878560",
-    redirectUri: "https://www.deepsaviors.xyz/callback",
-
     init: function() {
-        this.token = localStorage.getItem('ds_token');
-        if (!this.token) {
-            this.showLogin();
-            return;
-        }
-
         // Setup Sidebar Toggle
         const st = document.getElementById('sidebar-toggle');
         const sb = document.getElementById('dash-sidebar');
@@ -66,18 +62,20 @@ const DS = {
             });
         }
 
-        this.loadDiscordUser().then(user => {
+        this.loadSession().then(session => {
+            const user = session && session.user;
             if (!user) {
-                this.logout();
+                this.showLogin();
                 return;
             }
             this.user = user;
+            this.csrfToken = session.csrf_token;
             this.showServers();
         });
     },
 
     loginUrl: function() {
-        return `https://discord.com/api/oauth2/authorize?client_id=${this.clientId}&redirect_uri=${encodeURIComponent(this.redirectUri)}&response_type=token&scope=identify%20guilds`;
+        return this.apiBase.replace(/\/api$/, '') + '/auth/login';
     },
 
     showLogin: function() {
@@ -88,10 +86,19 @@ const DS = {
         btn.href = this.loginUrl();
     },
 
-    logout: function() {
-        localStorage.removeItem('ds_token');
-        localStorage.removeItem('ds_token_ts');
-        window.location.reload();
+    logout: async function() {
+        try {
+            await fetch(this.apiBase.replace(/\/api$/, '') + '/auth/logout', {
+                method: 'POST',
+                headers: { 'X-CSRF-Token': this.csrfToken || '' },
+                credentials: 'include',
+                mode: 'cors'
+            });
+        } finally {
+            this.user = null;
+            this.csrfToken = null;
+            window.location.reload();
+        }
     },
 
     // ── API Helpers ─────────────────────────────────────
@@ -116,26 +123,17 @@ const DS = {
         );
     },
 
-    fetchDiscord: async function(url) {
+    loadSession: async function() {
         try {
-            const res = await fetch(url, {
-                headers: { 'Authorization': `Bearer ${this.token}` },
-                credentials: 'omit',       // Avoid CORS cookie issues in Brave
+            const res = await fetch(this.apiBase.replace(/\/api$/, '') + '/auth/session', {
+                credentials: 'include',
                 mode: 'cors',
                 signal: this._timeoutSignal(10000)
             });
-            if (res.status === 401) { 
-                console.error('[Discord API] 401 Unauthorized for', url);
-                this.logout(); 
-                return null; 
-            }
-            if (!res.ok) {
-                console.error('[Discord API] HTTP', res.status, 'for', url);
-                return null;
-            }
+            if (!res.ok) return null;
             return await res.json();
         } catch (e) {
-            console.error('[Discord API] Network error for', url, e);
+            console.error('[Dashboard session]', e);
             if (this._isBlockedError(e)) {
                 this._showShieldWarning();
             }
@@ -147,8 +145,8 @@ const DS = {
         try {
             const opts = {
                 method: method,
-                headers: { 'Authorization': `Bearer ${this.token}` },
-                credentials: 'omit',
+                headers: { 'X-CSRF-Token': this.csrfToken || '' },
+                credentials: 'include',
                 mode: 'cors',
                 signal: this._timeoutSignal(10000)
             };
@@ -174,8 +172,7 @@ const DS = {
     checkBotAPI: async function() {
         try {
             const res = await fetch(this.apiBase + '/bot/guilds', {
-                headers: { 'Authorization': `Bearer ${this.token}` },
-                credentials: 'omit',
+                credentials: 'include',
                 mode: 'cors',
                 signal: this._timeoutSignal(4000)
             });
@@ -218,10 +215,6 @@ const DS = {
 
     // ── Data Loaders ────────────────────────────────────
 
-    loadDiscordUser: async function() {
-        return await this.fetchDiscord("https://discord.com/api/v10/users/@me");
-    },
-
     showServers: async function() {
         document.getElementById('view-login').style.display = 'none';
         document.getElementById('view-servers').style.display = 'block';
@@ -240,39 +233,13 @@ const DS = {
         const grid = document.getElementById('server-grid');
         grid.innerHTML = `<div class="skeleton" style="height:120px;grid-column:1/-1;"></div>`;
 
-        // 1. Fetch user's guilds directly from Discord API (always works)
-        const discordGuilds = await this.fetchDiscord("https://discord.com/api/v10/users/@me/guilds");
-        if (!discordGuilds || !Array.isArray(discordGuilds)) {
-            grid.innerHTML = `<p style="color:var(--text-muted);text-align:center;grid-column:1/-1;">Could not fetch your Discord servers. Try logging out and back in.</p>
-            <div style="text-align:center;grid-column:1/-1;margin-top:10px;"><button class="logout-btn" onclick="DS.logout()">Re-Login</button></div>`;
-            return;
-        }
-
-        console.log('[Dashboard] Got', discordGuilds.length, 'guilds from Discord');
-
-        // 2. Filter to guilds where user has Administrator
-        const adminGuilds = discordGuilds.filter(g => {
-            const perms = BigInt(g.permissions);
-            return (perms & 8n) === 8n; // ADMINISTRATOR
-        });
-
-        console.log('[Dashboard]', adminGuilds.length, 'guilds with admin perms');
-
-        // 3. Optionally check bot API to filter to guilds the bot is in
+        // The server returns only pilot guilds where this session has Administrator.
         const botData = await this.checkBotAPI();
-        let displayGuilds = adminGuilds;
-
-        if (botData && botData.guilds) {
-            // Bot API is reachable — only show guilds the bot is also in
-            const botGuildIds = new Set(botData.guilds.map(g => g.id));
-            displayGuilds = adminGuilds.filter(g => botGuildIds.has(g.id));
-        }
-        // If bot API is down, show all admin guilds (management will show error per-guild)
+        const displayGuilds = botData && Array.isArray(botData.guilds) ? botData.guilds : [];
 
         if (displayGuilds.length === 0) {
             grid.innerHTML = `<div style="text-align:center;grid-column:1/-1;padding:40px;">
-                <p style="margin-bottom:12px;">No manageable servers found${this.botApiOnline ? ' where the bot is present' : ''}.</p>
-                ${!this.botApiOnline ? '<p style="color:#E6A23C;font-size:0.85rem;margin-bottom:12px;"><i class="fas fa-exclamation-triangle"></i> Bot API is offline — showing all admin servers. Connect your bot API to filter.</p>' : ''}
+                <p style="margin-bottom:12px;">No manageable pilot servers found.</p>
                 <a href="/joinds" style="color:var(--primary);">Invite Bot</a>
             </div>`;
             return;
@@ -333,7 +300,7 @@ const DS = {
             isPrivate = guildId === PRIVATE_GUILD_ID;
             cogs = {};
             for (const [key, meta] of Object.entries(COG_REGISTRY)) {
-                if (meta.scope === "global" || isPrivate) {
+                if (meta.scope === "global" || meta.scope === "public" || isPrivate) {
                     cogs[key] = meta;
                 }
             }
@@ -454,11 +421,133 @@ const DS = {
         return html;
     },
 
+    generateCategorySelect: function(id, selectedId) {
+        let html = `<select id="${id}" class="ds-select"><option value="">-- None --</option>`;
+        this.channels.forEach(c => {
+            const typeStr = String(c.type);
+            if (typeStr === "4" || typeStr === "category") {
+                const sel = String(c.id) === String(selectedId) ? 'selected' : '';
+                html += `<option value="${c.id}" ${sel}>${this.escapeHtml(c.name)}</option>`;
+            }
+        });
+        html += `</select>`;
+        return html;
+    },
+
+    escapeHtml: function(value) {
+        return String(value ?? '').replace(/[&<>'"]/g, char => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+        }[char]));
+    },
+
+    renderPublicPilotPanel: async function(key) {
+        const gid = this.currentGuild.id;
+        const container = document.getElementById(`content-${key}`);
+        const data = await this.fetchAPI(`/guild/${gid}/public-config`);
+        if (!data) return;
+        const isPro = !!data.is_pro;
+        const theme = data.theme || { name: 'aurora' };
+        const guided = data.guided_setup || { pack: 'community', theme: theme.name || 'aurora' };
+        const customAccent = guided.custom_accent || theme.custom_accent || '#3BB4A0';
+        const themeNames = isPro ? ['aurora', 'abyss', 'ember', 'mist', 'void'] : ['aurora', 'abyss'];
+        const themeOptions = selected => themeNames.map(name => `<option value="${name}" ${name === selected ? 'selected' : ''}>${name[0].toUpperCase() + name.slice(1)}</option>`).join('');
+
+        if (key === 'public_setup') {
+            container.innerHTML = `
+                <div class="setting-card">
+                    <h3><i class="fas fa-wand-magic-sparkles"></i> Server Setup</h3>
+                    <p style="color:var(--text-muted);font-size:.85rem;margin:8px 0 16px;">Choose an additive pack, preview exactly what is missing, then explicitly apply it. Existing channels and roles are never renamed, reordered, or overwritten.</p>
+                    <div class="split-columns">
+                        <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px;"><div class="setting-label">Pack</div><select id="pilot-setup-pack" class="ds-select"><option value="community" ${guided.pack === 'community' ? 'selected' : ''}>Community</option><option value="competitive" ${guided.pack === 'competitive' ? 'selected' : ''}>Competitive / Gank</option><option value="support" ${guided.pack === 'support' ? 'selected' : ''}>Support</option><option value="full" ${guided.pack === 'full' ? 'selected' : ''}>Full Server</option></select></div>
+                        <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px;"><div class="setting-label">Theme</div><select id="pilot-setup-theme" class="ds-select">${themeOptions(guided.theme)}</select></div>
+                        <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px;"><div class="setting-label">Custom accent ${isPro ? '' : '<small>(Pro)</small>'}</div><input id="pilot-setup-accent" type="color" value="${customAccent}" ${isPro ? '' : 'disabled'}></div>
+                    </div>
+                    <div id="pilot-setup-preview" style="display:none;margin-top:16px;color:var(--text-muted);"></div>
+                    <div class="setting-row" style="margin-top:16px;border-top:none;gap:8px;justify-content:flex-start;"><button class="btn-save" style="background:#555;" onclick="DS.previewPublicSetup()">Preview Missing Resources</button><button class="btn-save" onclick="DS.applyPublicSetup()">Apply Additive Setup</button><button class="btn-save" style="background:transparent;border:1px solid var(--border);" onclick="DS.savePublicSetup()">Save Public Setup</button></div>
+                </div>`;
+            return;
+        }
+
+        if (key === 'moderation') {
+            const config = data.automod_config || {};
+            const logging = data.logging_config || {};
+            const ignoreText = value => Array.isArray(value) ? value.join(', ') : '';
+            const terms = Array.isArray(config.blocked_terms) ? config.blocked_terms.join('\n') : '';
+            const actions = Array.isArray(config.actions) && config.actions.length ? config.actions : ['delete', 'warn', 'staff_alert', 'case'];
+            const actionBox = (name, label) => `<label style="margin-right:12px;display:inline-flex;gap:5px;align-items:center;"><input type="checkbox" class="automod-action" value="${name}" ${actions.includes(name) ? 'checked' : ''}>${label}</label>`;
+            container.innerHTML = `
+                <div class="setting-card">
+                    <h3><i class="fas fa-shield-halved"></i> AutoMod Rules</h3>
+                    <p style="color:var(--text-muted);font-size:.85rem;margin:8px 0 16px;">Rules create local cases and can alert staff. The pilot never sends message bodies to AI.</p>
+                    <div class="setting-row" style="flex-wrap:wrap;gap:8px;"><div class="setting-label" style="width:100%;">Safe actions</div>${actionBox('delete', 'Delete')}${actionBox('warn', 'Warn')}${actionBox('timeout', 'Timeout')}${actionBox('quarantine', 'Quarantine')}${actionBox('staff_alert', 'Staff alert')}${actionBox('case', 'Case')}<label style="margin-left:12px;display:inline-flex;gap:5px;align-items:center;"><input id="automod-native-enabled" type="checkbox" ${config.native_enabled ? 'checked' : ''}>Enable native Discord AutoMod</label></div>
+                    <div class="split-columns"><div class="split-col"><div class="setting-row"><div class="setting-label">Block invites</div><input id="automod-invites" type="checkbox" ${config.block_invites ? 'checked' : ''}></div><div class="setting-row"><div class="setting-label">Block links</div><input id="automod-links" type="checkbox" ${config.block_links ? 'checked' : ''}></div><div class="setting-row"><div class="setting-label">Max mentions</div><input id="automod-mentions" class="ds-input" type="number" min="0" max="50" value="${Number(config.max_mentions || 0)}"></div><div class="setting-row"><div class="setting-label">Max attachments</div><input id="automod-attachments" class="ds-input" type="number" min="0" max="50" value="${Number(config.max_attachments || 0)}"></div><div class="setting-row"><div class="setting-label">Max emojis</div><input id="automod-emojis" class="ds-input" type="number" min="0" max="100" value="${Number(config.max_emojis || 0)}"></div><div class="setting-row"><div class="setting-label">Message rate limit</div><input id="automod-rate" class="ds-input" type="number" min="0" max="100" value="${Number(config.rate_limit || 0)}"></div><div class="setting-row"><div class="setting-label">Timeout (seconds)</div><input id="automod-timeout" class="ds-input" type="number" min="1" max="604800" value="${Number(config.timeout_seconds || 300)}"></div></div><div class="split-col"><div class="setting-row"><div class="setting-label">Max caps percent</div><input id="automod-caps" class="ds-input" type="number" min="0" max="100" value="${Number(config.max_caps_percent || 0)}"></div><div class="setting-row"><div class="setting-label">Duplicate limit</div><input id="automod-duplicates" class="ds-input" type="number" min="0" max="20" value="${Number(config.duplicate_limit || 0)}"></div><div class="setting-row"><div class="setting-label">Quarantine role</div>${this.generateRoleSelect('automod-quarantine-role', config.quarantine_role_id)}</div><div class="setting-row"><div class="setting-label">Staff alert channel</div>${this.generateChannelSelect('automod-staff-alert', config.staff_alert_channel_id)}</div></div></div>
+                    <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px;"><div class="setting-label">Blocked terms <small>one per line, max 100</small></div><textarea id="automod-terms" class="ds-input" style="width:100%;min-height:120px;">${this.escapeHtml(terms)}</textarea></div>
+                    <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px;"><div class="setting-label">Ignored users, roles, bots, and channels <small>comma-separated Discord IDs</small></div><input id="logging-ignore-users" class="ds-input" placeholder="User IDs" value="${this.escapeHtml(ignoreText(logging.ignored_user_ids))}"><input id="logging-ignore-roles" class="ds-input" placeholder="Role IDs" value="${this.escapeHtml(ignoreText(logging.ignored_role_ids))}"><input id="logging-ignore-bots" class="ds-input" placeholder="Bot user IDs" value="${this.escapeHtml(ignoreText(logging.ignored_bot_ids))}"><input id="logging-ignore-channels" class="ds-input" placeholder="Channel IDs" value="${this.escapeHtml(ignoreText(logging.ignored_channel_ids))}"></div>
+                    <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px;"><div class="setting-label">Ignored event families <small>comma-separated, e.g. message, member.update</small></div><input id="logging-ignore-events" class="ds-input" value="${this.escapeHtml(ignoreText(logging.ignored_event_families))}"></div>
+                    <div class="setting-row" style="margin-top:16px;border-top:none;gap:8px;"><button class="btn-save" onclick="DS.savePublicModeration()">Save AutoMod Rules</button><button class="btn-save" style="background:#555;" onclick="DS.syncNativeAutoMod()">Sync Native AutoMod</button></div>
+                </div>`;
+            return;
+        }
+
+        if (key === 'tickets') {
+            const config = data.ticket_config || {};
+            const formFields = Array.isArray(config.form_fields) && config.form_fields.length ? config.form_fields : [{ key: 'reason', label: 'How can staff help?', style: 'paragraph', required: true, max_length: 1000, placeholder: 'Describe what you need help with' }];
+            const formFieldText = formFields.map(field => [field.key, field.label, field.style || 'short', field.required === false ? 'optional' : 'required', field.max_length || 1000, field.placeholder || ''].join('|')).join('\n');
+            container.innerHTML = `
+                <div class="setting-card"><h3><i class="fas fa-ticket"></i> Ticket Configuration</h3>
+                    <p style="color:var(--text-muted);font-size:.85rem;margin:8px 0 16px;">Configure up to five form fields. One field per line: <code>key|label|short-or-paragraph|required-or-optional|max-length|placeholder</code>.</p>
+                    <div class="setting-row"><div class="setting-label">Form title</div><input id="pilot-ticket-form-title" class="ds-input" maxlength="45" value="${this.escapeHtml(config.form_title || 'Open a support ticket')}"></div>
+                    <div class="setting-row"><div class="setting-label">Form description</div><input id="pilot-ticket-form-description" class="ds-input" maxlength="200" value="${this.escapeHtml(config.form_description || '')}"></div>
+                    <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px;"><div class="setting-label">Form fields</div><textarea id="pilot-ticket-form-fields" class="ds-input" style="width:100%;min-height:120px;">${this.escapeHtml(formFieldText)}</textarea></div>
+                    <div class="setting-row"><div class="setting-label">Ticket category</div>${this.generateCategorySelect('pilot-ticket-category', config.category_id)}</div>
+                    <div class="setting-row"><div class="setting-label">Staff role</div>${this.generateRoleSelect('pilot-ticket-staff', config.staff_role_id)}</div>
+                    <div class="setting-row"><div class="setting-label">Transcript channel</div>${this.generateChannelSelect('pilot-ticket-transcript', config.transcript_channel_id)}</div>
+                    <div class="setting-row"><div class="setting-label">Transcript retention (days)</div><input id="pilot-ticket-retention" class="ds-input" type="number" min="1" max="28" value="${Number(config.transcript_retention_days || 7)}"></div>
+                    <div class="setting-row"><div class="setting-label">Allow reopen</div><input id="pilot-ticket-reopen" type="checkbox" ${config.allow_reopen !== false ? 'checked' : ''}></div>
+                    <div class="setting-row" style="margin-top:16px;border-top:none;"><button class="btn-save" onclick="DS.savePublicTickets()">Save Ticket Configuration</button></div>
+                </div>`;
+            return;
+        }
+
+        if (key === 'sticky_slowmode') {
+            const config = data.pilot_slowmode_config || {};
+            container.innerHTML = `
+                <div class="setting-card"><h3><i class="fas fa-thumbtack"></i> Sticky & Slowmode</h3>
+                    <div class="setting-row"><div class="setting-label">Questions channel<br><small>This channel is always exempt from automatic slowmode.</small></div>${this.generateChannelSelect('pilot-questions-channel', data.questions_channel_id)}</div>
+                    <div class="setting-row"><div class="setting-label">Activity window (seconds)</div><input id="pilot-slowmode-window" class="ds-input" type="number" min="3" max="120" value="${Number(config.window_seconds || 10)}"></div>
+                    <p style="color:var(--text-muted);font-size:.85rem;margin-top:16px;">Set per-channel sticky content with <code>/sticky_set</code>; it is stored only for that channel and pilot guild.</p>
+                    <div class="setting-row" style="margin-top:16px;border-top:none;"><button class="btn-save" onclick="DS.savePublicSlowmode()">Save Slowmode Settings</button></div>
+                </div>`;
+            return;
+        }
+
+        if (key === 'standard_antialt') {
+            const config = data.standard_antialt || {};
+            container.innerHTML = `
+                <div class="setting-card"><h3><i class="fas fa-user-shield"></i> Standard Anti-Alt</h3>
+                    <p style="color:var(--text-muted);font-size:.85rem;margin:8px 0 16px;">Uses Discord-native account and join signals for manual review only. It never fingerprints devices and never auto-bans.</p>
+                    <div class="setting-row"><div class="setting-label">Enable review signals</div><input id="pilot-antialt-enabled" type="checkbox" ${config.enabled ? 'checked' : ''}></div>
+                    <div class="setting-row"><div class="setting-label">Verified role<br><small>Optional native membership signal</small></div>${this.generateRoleSelect('pilot-antialt-verified-role', config.verified_role_id)}</div>
+                    <div class="setting-row"><div class="setting-label">Quarantine role</div>${this.generateRoleSelect('pilot-antialt-role', config.quarantine_role_id)}</div>
+                    <div class="setting-row"><div class="setting-label">Review log channel</div>${this.generateChannelSelect('pilot-antialt-log', config.log_channel_id)}</div>
+                    <div class="setting-row" style="margin-top:16px;border-top:none;"><button class="btn-save" onclick="DS.savePublicAntiAlt()">Save Anti-Alt Settings</button></div>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = `<div class="setting-card"><h3><i class="fas fa-crosshairs"></i> Local KOS</h3><p style="color:var(--text-muted);">KOS records are local to this server. Use <code>/kos_add</code>, <code>/kos_check</code>, and <code>/spot</code>; no network KOS or cross-server reputation data exists in the pilot.</p></div>`;
+    },
+
     // ── Panel Renderers ─────────────────────────────────
 
     renderPanel: async function(key) {
         const container = document.getElementById(`content-${key}`);
         const gid = this.currentGuild.id;
+
+        if (['public_setup', 'moderation', 'tickets', 'sticky_slowmode', 'standard_antialt', 'local_kos'].includes(key)) {
+            await this.renderPublicPilotPanel(key);
+            return;
+        }
 
         if (key === 'gankping') {
             const data = await this.fetchAPI(`/guild/${gid}/gankping`);
@@ -646,7 +735,7 @@ const DS = {
                                 <h3 style="color:#fff; margin-bottom:5px;">Pro Plan Required</h3>
                                 <p style="color:var(--text-muted); font-size: 0.85rem; margin-bottom:15px; text-align:center; max-width: 80%;">Unlock Custom Webhook Avatars and Names for a <b>$5 lifetime</b> plan!</p>
                                 <div style="display:flex; gap:10px;">
-                                    <a href="https://www.patreon.com/cw/Rinwoken/shop" target="_blank" class="btn-save" style="background:#E63946; text-decoration: none; padding: 8px 16px;"><i class="fas fa-crown"></i> Upgrade to Pro</a>
+                                <span class="btn-save" style="background:#555;opacity:.9;padding:8px 16px;cursor:default;"><i class="fas fa-flask"></i> Pilot Pro billing is not enabled yet</span>
                                 </div>
                             </div>` : ''}
                             <h3 style="color:#FFD700;"><i class="fas fa-palette"></i> Custom Branding</h3>
@@ -930,6 +1019,31 @@ const DS = {
             `;
         }
         else if (key === 'faq') {
+            if (String(gid) !== PRIVATE_GUILD_ID) {
+                const data = await this.fetchAPI(`/guild/${gid}/public-config`);
+                if (!data) return;
+                window.removePilotFaqRow = function(btn) { btn.closest('.faq-row').remove(); };
+                window.addPilotFaqRow = (question = '', answer = '') => {
+                    const rows = document.getElementById('pilot-faq-container');
+                    const row = document.createElement('div');
+                    row.className = 'faq-row';
+                    row.style.cssText = 'display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;';
+                    row.innerHTML = `<input type="text" class="ds-input pilot-faq-q" placeholder="Question or alias" value="${this.escapeHtml(question)}" style="flex:1;"><textarea class="ds-input pilot-faq-a" placeholder="Reviewed answer" style="flex:2;height:48px;resize:vertical;">${this.escapeHtml(answer)}</textarea><button class="btn-save" style="background:var(--danger);padding:10px;" onclick="removePilotFaqRow(this)"><i class="fas fa-trash"></i></button>`;
+                    rows.appendChild(row);
+                };
+                container.innerHTML = `
+                    <div class="setting-card"><h3><i class="fas fa-circle-question"></i> Pilot FAQ</h3>
+                        <p style="font-size:.85rem;color:var(--text-muted);margin:8px 0 16px;">Entries are normalized for aliases and common question variants. AI drafts are explicit staff-only Discord actions; this dashboard never sends FAQ text to AI.</p>
+                        <div class="setting-row"><div class="setting-label">Questions channel<br><small>FAQ replies are scoped here and automatic slowmode is exempt.</small></div>${this.generateChannelSelect('pilot-faq-questions-channel', data.questions_channel_id)}</div>
+                        <div id="pilot-faq-container" style="margin:16px 0;"></div>
+                        <button class="btn-save" style="background:#555;margin-bottom:16px;" onclick="addPilotFaqRow()">+ Add FAQ Entry</button>
+                        <div class="setting-row" style="border-top:none;"><button class="btn-save" onclick="DS.savePublicFaq()">Save Pilot FAQ</button></div>
+                    </div>`;
+                const entries = data.faq_entries || {};
+                Object.entries(entries).forEach(([question, answer]) => window.addPilotFaqRow(question, answer));
+                if (Object.keys(entries).length === 0) window.addPilotFaqRow();
+                return;
+            }
             const data = await this.fetchAPI(`/guild/${gid}/faq`);
             if (!data) return;
             
@@ -1149,6 +1263,153 @@ const DS = {
     },
 
     // ── Save Actions ────────────────────────────────────
+
+    savePublicSettings: async function(settings) {
+        const gid = this.currentGuild.id;
+        const result = await this.fetchAPI(`/guild/${gid}/public-config`, 'POST', { settings });
+        if (result && result.ok) this.toast("Pilot settings saved");
+        return result;
+    },
+
+    savePublicSetup: async function() {
+        const customAccent = document.getElementById('pilot-setup-accent');
+        await this.savePublicSettings({
+            guided_setup: {
+                pack: document.getElementById('pilot-setup-pack').value,
+                theme: document.getElementById('pilot-setup-theme').value,
+                ...(customAccent && !customAccent.disabled ? { custom_accent: customAccent.value } : {}),
+            },
+            theme: {
+                name: document.getElementById('pilot-setup-theme').value,
+                ...(customAccent && !customAccent.disabled ? { custom_accent: customAccent.value } : {}),
+            },
+        });
+    },
+
+    publicSetupSelection: function() {
+        const customAccent = document.getElementById('pilot-setup-accent');
+        return {
+            pack: document.getElementById('pilot-setup-pack').value,
+            theme: document.getElementById('pilot-setup-theme').value,
+            ...(customAccent && !customAccent.disabled ? { custom_accent: customAccent.value } : {}),
+        };
+    },
+
+    previewPublicSetup: async function() {
+        const gid = this.currentGuild.id;
+        const query = new URLSearchParams(this.publicSetupSelection());
+        const result = await this.fetchAPI(`/guild/${gid}/public-setup/preview?${query.toString()}`);
+        if (!result) return;
+        const summary = document.getElementById('pilot-setup-preview');
+        const channels = (result.missing_channels || []).map(item => `#${this.escapeHtml(item.name)} in ${this.escapeHtml(item.category)}`).join(', ') || 'None';
+        summary.style.display = 'block';
+        summary.innerHTML = `<strong>Preview:</strong> roles: ${this.escapeHtml((result.missing_roles || []).join(', ') || 'None')}<br>categories: ${this.escapeHtml((result.missing_categories || []).join(', ') || 'None')}<br>bot permissions: ${this.escapeHtml((result.missing_permissions || []).join(', ') || 'None')}<br>channels: ${channels}`;
+    },
+
+    applyPublicSetup: async function() {
+        if (!confirm('Apply this additive setup? Only resources reported as missing will be created.')) return;
+        const gid = this.currentGuild.id;
+        const result = await this.fetchAPI(`/guild/${gid}/public-setup/apply`, 'POST', {
+            ...this.publicSetupSelection(), confirm: true,
+        });
+        if (result && result.ok) {
+            this.toast(result.created && result.created.length ? `Setup applied: ${result.created.join(', ')}` : 'Setup applied; no resources were missing.');
+            this.renderPanel('public_setup');
+        }
+    },
+
+    savePublicModeration: async function() {
+        const csv = id => document.getElementById(id).value.split(',').map(value => value.trim()).filter(Boolean);
+        const terms = document.getElementById('automod-terms').value.split('\n').map(term => term.trim()).filter(Boolean);
+        const actions = Array.from(document.querySelectorAll('.automod-action:checked')).map(input => input.value);
+        if (!actions.length) { this.toast('Choose at least one safe AutoMod action.'); return; }
+        await this.savePublicSettings({ automod_config: {
+            blocked_terms: terms,
+            max_mentions: Number(document.getElementById('automod-mentions').value || 0),
+            block_invites: document.getElementById('automod-invites').checked,
+            block_links: document.getElementById('automod-links').checked,
+            max_attachments: Number(document.getElementById('automod-attachments')?.value || 0),
+            max_caps_percent: Number(document.getElementById('automod-caps').value || 0),
+            max_emojis: Number(document.getElementById('automod-emojis')?.value || 0),
+            duplicate_limit: Number(document.getElementById('automod-duplicates').value || 0),
+            rate_limit: Number(document.getElementById('automod-rate').value || 0),
+            actions,
+            native_enabled: document.getElementById('automod-native-enabled').checked,
+            timeout_seconds: Number(document.getElementById('automod-timeout').value || 300),
+            quarantine_role_id: document.getElementById('automod-quarantine-role').value || null,
+            staff_alert_channel_id: document.getElementById('automod-staff-alert').value || null,
+        }, logging_config: {
+            ignored_user_ids: csv('logging-ignore-users'),
+            ignored_role_ids: csv('logging-ignore-roles'),
+            ignored_bot_ids: csv('logging-ignore-bots'),
+            ignored_channel_ids: csv('logging-ignore-channels'),
+            ignored_event_families: csv('logging-ignore-events'),
+        }});
+    },
+
+    syncNativeAutoMod: async function() {
+        const gid = this.currentGuild.id;
+        const enabled = document.getElementById('automod-native-enabled').checked;
+        const result = await this.fetchAPI(`/guild/${gid}/public-automod/native-sync`, 'POST', { confirm: true, enabled });
+        if (result && result.ok) this.toast(`Native AutoMod synced: ${(result.rules || []).length} active rule(s).`);
+    },
+
+    savePublicTickets: async function() {
+        let formFields;
+        try {
+            formFields = document.getElementById('pilot-ticket-form-fields').value.split('\n').map(line => line.trim()).filter(Boolean).map((line, index) => {
+                const [key, label, style = 'short', required = 'required', maxLength = '1000', placeholder = ''] = line.split('|');
+                if (!key || !label || !['short', 'paragraph'].includes(style) || !['required', 'optional'].includes(required)) throw new Error(`Invalid ticket form field on line ${index + 1}`);
+                return { key: key.trim(), label: label.trim(), style, required: required === 'required', max_length: Number(maxLength) || 1000, placeholder: placeholder.trim() };
+            });
+        } catch (error) {
+            this.toast(error.message || 'Invalid ticket form field configuration.');
+            return;
+        }
+        if (!formFields.length || formFields.length > 5) { this.toast('Ticket forms require between 1 and 5 fields.'); return; }
+        await this.savePublicSettings({ ticket_config: {
+            category_id: document.getElementById('pilot-ticket-category').value || null,
+            staff_role_id: document.getElementById('pilot-ticket-staff').value || null,
+            transcript_channel_id: document.getElementById('pilot-ticket-transcript').value || null,
+            transcript_retention_days: Number(document.getElementById('pilot-ticket-retention').value || 7),
+            allow_reopen: document.getElementById('pilot-ticket-reopen').checked,
+            form_title: document.getElementById('pilot-ticket-form-title').value.trim(),
+            form_description: document.getElementById('pilot-ticket-form-description').value.trim(),
+            form_fields: formFields,
+        }});
+    },
+
+    savePublicSlowmode: async function() {
+        await this.savePublicSettings({
+            questions_channel_id: document.getElementById('pilot-questions-channel').value || null,
+            pilot_slowmode_config: {
+                window_seconds: Number(document.getElementById('pilot-slowmode-window').value || 10),
+                thresholds: [{ messages: 15, slowmode: 15 }, { messages: 8, slowmode: 10 }, { messages: 4, slowmode: 5 }],
+            },
+        });
+    },
+
+    savePublicAntiAlt: async function() {
+        await this.savePublicSettings({ standard_antialt: {
+            enabled: document.getElementById('pilot-antialt-enabled').checked,
+            verified_role_id: document.getElementById('pilot-antialt-verified-role').value || null,
+            quarantine_role_id: document.getElementById('pilot-antialt-role').value || null,
+            log_channel_id: document.getElementById('pilot-antialt-log').value || null,
+        }});
+    },
+
+    savePublicFaq: async function() {
+        const entries = {};
+        document.querySelectorAll('.faq-row').forEach(row => {
+            const question = row.querySelector('.pilot-faq-q').value.trim();
+            const answer = row.querySelector('.pilot-faq-a').value.trim();
+            if (question && answer) entries[question] = answer;
+        });
+        await this.savePublicSettings({
+            faq_entries: entries,
+            questions_channel_id: document.getElementById('pilot-faq-questions-channel').value || null,
+        });
+    },
 
     saveGankPing: async function(netId) {
         const gid = this.currentGuild.id;
