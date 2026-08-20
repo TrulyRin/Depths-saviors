@@ -33,7 +33,7 @@
     <main class="main-content">
         <div style="text-align: center; margin-bottom: 40px;">
             <h2 style="font-size: 2.5rem; margin-bottom: 10px;">Privacy Policy</h2>
-            <p style="color: var(--text-muted);">Last Updated: January 2025</p>
+            <p style="color: var(--text-muted);">Last Updated: August 2026</p>
         </div>
 
         <div class="glass-panel">
@@ -86,27 +86,27 @@
         <div class="glass-panel">
             <h3 style="color: var(--primary); margin-bottom: 15px;">4. Data Retention & Your Rights</h3>
             <p style="color: var(--text-muted); margin-bottom: 10px;">
-                We retain data for as long as your Guild is part of the Alliance Network.
+                During the two-guild pilot, public-suite data is isolated per guild and retained only while the bot remains installed and the data is needed to operate the enabled feature.
             </p>
             <ul style="padding-left: 20px; line-height: 1.8; color: var(--text-main);">
-                <li><strong>Right to Removal:</strong> If you kick the bot from your server, your configuration data remains in our database until a manual cleanup.</li>
-                <li><strong>Right to Erasure:</strong> You may request the complete deletion of your Guild's data or your User statistics by opening a ticket in our Support Server.</li>
+                <li><strong>Guild removal:</strong> When a pilot guild removes the bot, public-suite processing stops immediately and active tenant data, attachments, caches, and the tenant encryption key are queued for deletion within 72 hours. There is no recovery snapshot.</li>
+                <li><strong>Right to erasure:</strong> A logged-in member can request deletion of their pilot data from the dashboard; the request uses the authenticated Discord identity, never a supplied user ID.</li>
             </ul>
         </div>
 
         <div class="glass-panel">
-            <h3 style="color: var(--primary); margin-bottom: 15px;">5. Verification & Browser Fingerprinting</h3>
+            <h3 style="color: var(--primary); margin-bottom: 15px;">5. Verification</h3>
             <p style="color: var(--text-muted); margin-bottom: 10px;">
-                When you verify your Discord session through our verification page, we collect data to prevent alt accounts and ban evasion:
+                Standard pilot verification is Discord-native and manual-review oriented. It does not collect browser, device, hardware, fingerprint, screen, language, timezone, User-Agent, or network metadata.
             </p>
             <ul style="padding-left: 20px; line-height: 1.8; color: var(--text-main);">
-                <li>A browser fingerprint hash (derived from canvas, WebGL, and browser properties)</li>
-                <li>Screen resolution, color depth, and touch support</li>
-                <li>Timezone and language preferences</li>
-                <li>Browser User-Agent string</li>
+                <li>A staff-issued one-time verification code is stored only as a cryptographic hash.</li>
+                <li>Codes expire after 15 minutes, allow at most five failed attempts, and are single-use.</li>
+                <li>Standard anti-alt signals may request quarantine and human review; they never automatically ban.</li>
+                <li>Enhanced device linkage is disabled and cannot be enabled for this pilot without separate privacy and legal review.</li>
             </ul>
             <p style="color: var(--text-muted); margin-top: 10px;">
-                This data is hashed into a non-reversible identifier. It cannot identify you personally outside of our system. This data is stored until you request erasure or your guild leaves our network.
+                Verification completion is recorded as a guild-local audit event. Staff can offer a genuinely usable manual alternative.
             </p>
         </div>
 

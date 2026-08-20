@@ -1,389 +1,109 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Depths Saviors Security Verification Portal.">
-    <title>Verify | Depths Saviors</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="https://cdn.discordapp.com/icons/1305511241577529354/a_4fed118f11cec184cd86e27a540119bd.gif?animated=true&size=1024" type="image/gif">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <style>
-        .verify-container { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px; position:relative; z-index:10; }
-        .verify-card { background:var(--bg-surface); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid var(--border-light); border-radius:24px; padding:40px; width:100%; max-width:480px; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.3); animation:fadeIn 0.6s ease-out; }
-        .verify-shield-container { position:relative; width:100px; height:100px; margin:0 auto 25px; display:flex; align-items:center; justify-content:center; }
-        .verify-shield { font-size:4rem; color:var(--primary); text-shadow:0 0 20px var(--primary-glow); transition:color 0.3s,text-shadow 0.3s; }
-        .scan-line { position:absolute; top:0; left:0; width:100%; height:4px; background:var(--secondary); box-shadow:0 0 10px var(--secondary); animation:scan 2s linear infinite; border-radius:2px; display:none; }
-        @keyframes scan { 0%{top:0;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{top:100%;opacity:0} }
-        .verify-btn { background:var(--primary); color:#021310; border:none; padding:16px 32px; border-radius:12px; font-size:1.1rem; font-weight:700; cursor:pointer; width:100%; margin-top:25px; transition:all 0.3s ease; box-shadow:0 0 15px var(--primary-glow); display:flex; align-items:center; justify-content:center; gap:10px; }
-        .verify-btn:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 6px 25px var(--primary-glow); background:var(--secondary); }
-        .verify-btn:disabled { background:rgba(7,172,147,0.3); color:rgba(255,255,255,0.5); cursor:not-allowed; box-shadow:none; transform:none; }
-        .privacy-notice { font-size:0.85rem; color:var(--text-muted); margin-top:20px; line-height:1.5; }
-        .privacy-notice a { color:var(--primary); text-decoration:none; }
-        .privacy-notice a:hover { text-decoration:underline; }
-        .error-text { color:var(--danger-color,#E63946); margin-top:15px; font-weight:600; display:none; }
-        .success-text { color:var(--success-color,#00BF7F); margin-top:15px; font-weight:600; display:none; font-size:1.2rem; }
-        .status-scanning .verify-shield { color:var(--secondary); }
-        .status-success .verify-shield { color:#00BF7F; text-shadow:0 0 20px rgba(0,191,127,0.4); }
-        .status-error .verify-shield { color:#E63946; text-shadow:0 0 20px rgba(230,57,70,0.4); }
-        .spinner { animation:rotate 2s linear infinite; display:none; }
-        .verify-btn.loading .spinner { display:inline-block; }
-        .verify-btn.loading .btn-icon { display:none; }
-        @keyframes rotate { 100%{transform:rotate(360deg)} }
-        #particles-js { position:absolute; width:100%; height:100%; top:0; left:0; z-index:1; }
-        .security-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(7,172,147,0.15); border:1px solid rgba(7,172,147,0.3); border-radius:8px; padding:6px 12px; font-size:0.8rem; color:var(--primary); margin-top:15px; }
-        .expired-notice { color:var(--text-muted); margin-top:15px; font-size:0.9rem; display:none; }
-        .warning-box { background:rgba(230,57,70,0.1); border:1px solid rgba(230,57,70,0.3); border-radius:10px; padding:14px 16px; margin-top:20px; text-align:left; }
-        .warning-box .warning-title { color:#E63946; font-weight:700; font-size:0.85rem; display:flex; align-items:center; gap:6px; margin-bottom:8px; }
-        .warning-box ul { color:var(--text-muted); font-size:0.8rem; margin:0; padding-left:18px; line-height:1.7; }
-        .warning-box ul li strong { color:var(--text-main); }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Deepsaviors Verification</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #10131a; color: #eef3f8; font: 16px/1.5 Inter, system-ui, sans-serif; }
+    main { width: min(560px, calc(100% - 48px)); padding: 32px; border: 1px solid #2f4050; border-radius: 16px; background: #17212b; text-align: center; }
+    input, button { box-sizing: border-box; width: 100%; margin-top: 14px; padding: 12px; border-radius: 8px; font: inherit; }
+    input { border: 1px solid #506477; background: #10131a; color: #eef3f8; }
+    button { border: 0; background: #66d9c4; color: #0e1b20; cursor: pointer; font-weight: 700; }
+    button:disabled { opacity: .55; cursor: wait; }
+    #status { min-height: 1.5em; margin-top: 16px; color: #bed0dc; }
+    a { color: #66d9c4; }
+  </style>
 </head>
 <body>
-    <div id="particles-js"></div>
-    <div class="verify-container">
-        <div class="verify-card" id="mainCard">
-            <div class="verify-shield-container" id="shieldContainer">
-                <i class="fas fa-shield-halved verify-shield" id="shieldIcon"></i>
-                <div class="scan-line" id="scanLine"></div>
-            </div>
-            <h2 style="font-size:1.8rem;margin-bottom:10px;color:var(--text-main);" id="titleText">Security Verification</h2>
-            <p style="color:var(--text-muted);font-size:1.05rem;margin-bottom:5px;" id="descText">Please verify your session to access the server.</p>
-            <button class="verify-btn" id="verifyBtn" disabled>
-                <i class="fas fa-fingerprint btn-icon"></i>
-                <i class="fas fa-circle-notch spinner"></i>
-                <span id="btnText">Initializing...</span>
-            </button>
-            <div class="error-text" id="errorText"></div>
-            <div class="success-text" id="successText">You may now return to Discord.</div>
-            <div class="expired-notice" id="expiredNotice">
-                <i class="fas fa-clock"></i> Your link has expired. Please request a new one in the Discord server by typing <strong>/antialt testjoin</strong> or rejoining.
-            </div>
-            <div class="security-badge"><i class="fas fa-lock"></i> HMAC-Signed &amp; Encrypted</div>
-            <div class="warning-box">
-                <div class="warning-title"><i class="fas fa-exclamation-triangle"></i> Anti-Evasion Notice</div>
-                <ul>
-                    <li>Your device fingerprint is cross-checked against <strong>all banned accounts</strong>.</li>
-                    <li>If linked to a banned user, you will be <strong>automatically banned</strong>.</li>
-                    <li>Only <strong>1 alt account</strong> per device is allowed. Additional alts will be kicked.</li>
-                    <li>Using VPNs or incognito does <strong>not</strong> bypass this system.</li>
-                </ul>
-            </div>
-            <div class="privacy-notice">
-                By clicking verify, you agree to our <a href="/privacy" target="_blank">Privacy Policy</a>.<br>
-                We collect anonymized browser data to prevent alt accounts.
-            </div>
-        </div>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-    <script>
-        const API_URL = "https://api.deepsaviors.xyz/api/verify";
-        const CLIENT_ID = "1373795045529878560";
-        const REDIRECT_URI = "https://www.deepsaviors.xyz/verify";
+  <main>
+    <h1>Discord-native verification</h1>
+    <p>Enter the one-time code sent to you by server staff in a Discord DM. This page does not collect browser, device, fingerprint, hardware, or network metadata.</p>
+    <p id="identity">Checking your Discord session…</p>
+    <form id="verify-form" hidden>
+      <label for="code">One-time code</label>
+      <input id="code" name="code" autocomplete="one-time-code" maxlength="256" required>
+      <button id="submit" type="submit">Complete verification</button>
+    </form>
+    <p id="status" role="status"></p>
+    <p><a href="/privacy">Privacy information</a></p>
+  </main>
+  <script>
+    (() => {
+      const apiBase = localStorage.getItem('ds_api_url') || (
+        location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+          ? 'http://localhost:8080/api'
+          : 'https://api.deepsaviors.xyz/api'
+      );
+      const apiOrigin = apiBase.replace(/\/api$/, '');
+      const guildId = new URLSearchParams(location.search).get('guild');
+      const identity = document.getElementById('identity');
+      const form = document.getElementById('verify-form');
+      const status = document.getElementById('status');
+      const submit = document.getElementById('submit');
+      let csrfToken = null;
 
-        let token, guildId, userId, sig;
-        let discordToken = null;
+      if (!/^\d{17,20}$/.test(guildId || '')) {
+        identity.textContent = 'This verification link is invalid. Ask server staff for a new code.';
+        return;
+      }
 
-        function parseParams() {
-            // Try query string first
-            const urlParams = new URLSearchParams(window.location.search);
-            token = urlParams.get('token');
-            guildId = urlParams.get('guild');
-            userId = urlParams.get('user');
-            sig = urlParams.get('sig');
+      async function loadSession() {
+        const response = await fetch(apiOrigin + '/auth/session', { credentials: 'include', mode: 'cors' });
+        if (!response.ok) return null;
+        return response.json();
+      }
 
-            // Parse from hash if returning from Discord OAuth
-            const hash = window.location.hash.substring(1);
-            if (hash) {
-                const hashParams = new URLSearchParams(hash);
-                discordToken = hashParams.get('access_token');
-                const state = hashParams.get('state');
-                
-                if (state) {
-                    const stateParams = new URLSearchParams(decodeURIComponent(state));
-                    if (stateParams.get('token')) token = stateParams.get('token');
-                    if (stateParams.get('guild')) guildId = stateParams.get('guild');
-                    if (stateParams.get('user')) userId = stateParams.get('user');
-                    if (stateParams.get('sig')) sig = stateParams.get('sig');
-                    
-                    // Clean URL to hide token, restore original query params
-                    window.history.replaceState(null, null, window.location.pathname + decodeURIComponent(state));
-                }
-            }
+      loadSession().then(session => {
+        if (!session || !session.user) {
+          identity.textContent = 'Sign in with Discord before entering your code.';
+          const login = document.createElement('button');
+          login.type = 'button';
+          login.textContent = 'Sign in with Discord';
+          login.addEventListener('click', () => {
+            location.assign(apiOrigin + '/auth/login?return_to=' + encodeURIComponent(location.href));
+          });
+          identity.after(login);
+          return;
         }
+        csrfToken = session.csrf_token;
+        identity.textContent = 'Signed in as ' + (session.user.username || 'your Discord account') + '.';
+        form.hidden = false;
+      }).catch(() => {
+        identity.textContent = 'The verification service is unavailable. Contact server staff for manual review.';
+      });
 
-        const btn = document.getElementById('verifyBtn');
-        const btnText = document.getElementById('btnText');
-        const shieldContainer = document.getElementById('shieldContainer');
-        const shieldIcon = document.getElementById('shieldIcon');
-        const scanLine = document.getElementById('scanLine');
-        const errorText = document.getElementById('errorText');
-        const successText = document.getElementById('successText');
-        const titleText = document.getElementById('titleText');
-        const descText = document.getElementById('descText');
-        const expiredNotice = document.getElementById('expiredNotice');
-
-        // === FALLBACK FINGERPRINT (Brave, Tor, privacy browsers) ===
-        async function getFallbackFingerprint() {
-            const signals = [];
-            // Canvas fingerprint
-            try {
-                const canvas = document.createElement('canvas');
-                canvas.width = 200; canvas.height = 50;
-                const ctx = canvas.getContext('2d');
-                ctx.textBaseline = 'top';
-                ctx.font = '14px Arial';
-                ctx.fillStyle = '#f60';
-                ctx.fillRect(125,1,62,20);
-                ctx.fillStyle = '#069';
-                ctx.fillText('DS-Verify-2024', 2, 15);
-                ctx.fillStyle = 'rgba(102,204,0,0.7)';
-                ctx.fillText('DS-Verify-2024', 4, 17);
-                signals.push(canvas.toDataURL().slice(-50));
-            } catch(e) { signals.push('canvas-blocked'); }
-
-            // WebGL renderer
-            try {
-                const gl = document.createElement('canvas').getContext('webgl');
-                if (gl) {
-                    const ext = gl.getExtension('WEBGL_debug_renderer_info');
-                    signals.push(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : 'no-ext');
-                    signals.push(ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : 'no-ext');
-                } else { signals.push('no-webgl'); }
-            } catch(e) { signals.push('webgl-blocked'); }
-
-            // Audio context
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const analyser = audioCtx.createAnalyser();
-                const gain = audioCtx.createGain();
-                const processor = audioCtx.createScriptProcessor(4096, 1, 1);
-                oscillator.type = 'triangle';
-                oscillator.frequency.setValueAtTime(10000, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0, audioCtx.currentTime);
-                oscillator.connect(analyser);
-                analyser.connect(gain);
-                gain.connect(audioCtx.destination);
-                oscillator.start(0);
-                const buffer = new Float32Array(analyser.frequencyBinCount);
-                analyser.getFloatFrequencyData(buffer);
-                signals.push(buffer.slice(0,10).join(','));
-                oscillator.stop();
-                audioCtx.close();
-            } catch(e) { signals.push('audio-blocked'); }
-
-            // Hardware signals
-            signals.push(String(navigator.hardwareConcurrency || 0));
-            signals.push(String(navigator.deviceMemory || 0));
-            signals.push(navigator.platform || 'unknown');
-            signals.push(String(window.screen.colorDepth));
-            signals.push(`${window.screen.width}x${window.screen.height}`);
-            try { signals.push(Intl.DateTimeFormat().resolvedOptions().timeZone); } catch(e) { signals.push('tz-blocked'); }
-            signals.push(navigator.language);
-            signals.push(String(navigator.maxTouchPoints));
-
-            // Hash all signals together
-            const raw = signals.join('|||');
-            try {
-                if (crypto && crypto.subtle) {
-                    const encoder = new TextEncoder();
-                    const data = encoder.encode(raw);
-                    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-                    const hashArray = Array.from(new Uint8Array(hashBuffer));
-                    return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
-                } else {
-                    return btoa(raw).replace(/[^a-zA-Z0-9]/g, '').substring(0, 64); // Safe fallback
-                }
-            } catch(e) {
-                return "fallback-error-" + Date.now();
-            }
-        }
-
-        // === PRIMARY FINGERPRINT ===
-        let fpPromise;
+      form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const code = document.getElementById('code').value.trim();
+        if (!code) return;
+        submit.disabled = true;
+        status.textContent = 'Checking your one-time code…';
         try {
-            fpPromise = import('https://openfpcdn.io/fingerprintjs/v5')
-                .then(FingerprintJS => FingerprintJS.load());
-        } catch(e) {
-            fpPromise = null;
+          const response = await fetch(apiBase + '/verify', {
+            method: 'POST',
+            credentials: 'include',
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken || '' },
+            body: JSON.stringify({ guild_id: guildId, code }),
+          });
+          const payload = await response.json();
+          const messages = {
+            verified: 'Verification complete. You may return to Discord.',
+            expired: 'That code expired. Ask staff to issue a new one.',
+            attempt_limit: 'That code is locked after five attempts. Ask staff to issue a new one.',
+            invalid: 'That code is invalid or has already been used.',
+          };
+          status.textContent = messages[payload.status] || 'Verification could not be completed. Contact staff for manual review.';
+          if (payload.status === 'verified') form.hidden = true;
+        } catch (_) {
+          status.textContent = 'The verification service is unavailable. Contact server staff for manual review.';
+        } finally {
+          submit.disabled = false;
         }
-
-        async function getFingerprint() {
-            let primary = null;
-            // Try FingerprintJS first
-            if (fpPromise) {
-                try {
-                    const fp = await fpPromise;
-                    const result = await fp.get();
-                    primary = result.visitorId;
-                } catch(e) { console.warn('FingerprintJS failed, using fallback:', e); }
-            }
-            // Always compute fallback
-            const fallback = await getFallbackFingerprint();
-            // Use primary if available, otherwise fallback
-            return { hash: primary || fallback, method: primary ? 'fpjs' : 'fallback', fallbackHash: fallback };
-        }
-
-        // === NONCE GENERATOR ===
-        function generateNonce() {
-            const arr = new Uint8Array(16);
-            crypto.getRandomValues(arr);
-            return Array.from(arr, b => b.toString(16).padStart(2,'0')).join('');
-        }
-
-        async function init() {
-            parseParams();
-            
-            particlesJS("particles-js", {
-                particles: { number:{value:40,density:{enable:true,value_area:800}}, color:{value:"#07ac93"}, shape:{type:"circle"}, opacity:{value:0.3,random:true}, size:{value:3,random:true}, line_linked:{enable:true,distance:150,color:"#07ac93",opacity:0.2,width:1}, move:{enable:true,speed:1,direction:"none",random:true,out_mode:"out"} },
-                interactivity: { detect_on:"canvas", events:{onhover:{enable:true,mode:"grab"},onclick:{enable:false},resize:true}, modes:{grab:{distance:140,line_linked:{opacity:0.5}}} },
-                retina_detect: true
-            });
-
-            // Validate all required params including signature
-            if (!token || !guildId || !userId || !sig) {
-                showError("Invalid or tampered verification link.");
-                descText.innerText = "Missing required parameters. Please request a new link in Discord.";
-                btn.style.display = 'none';
-                return;
-            }
-            if (localStorage.getItem(`verified_${token}`)) {
-                showSuccess();
-                return;
-            }
-
-            if (!discordToken) {
-                btn.disabled = false;
-                btnText.innerText = "Login with Discord";
-                shieldIcon.className = "fab fa-discord verify-shield";
-                btn.onclick = () => {
-                    const stateStr = encodeURIComponent(window.location.search);
-                    const oauthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=identify&state=${stateStr}`;
-                    window.location.href = oauthUrl;
-                };
-                return;
-            }
-
-            btn.onclick = verify;
-            let countdown = 3;
-            btnText.innerText = `Please wait ${countdown}s...`;
-            const timer = setInterval(() => {
-                countdown--;
-                if (countdown > 0) {
-                    btnText.innerText = `Please wait ${countdown}s...`;
-                } else {
-                    clearInterval(timer);
-                    btn.disabled = false;
-                    btnText.innerText = "Verify Me";
-                    shieldIcon.className = "fas fa-fingerprint verify-shield";
-                }
-            }, 1000);
-
-            if (fpPromise) fpPromise.catch(() => {});
-        }
-
-        async function verify() {
-            btn.disabled = true;
-            btn.classList.add('loading');
-            btnText.innerText = "Analyzing Browser...";
-            shieldContainer.className = "verify-shield-container status-scanning";
-            scanLine.style.display = "block";
-            errorText.style.display = "none";
-
-            try {
-                const fp = await getFingerprint();
-                const nonce = generateNonce();
-                
-                let tz = "Unknown";
-                try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch(e) {}
-                
-                const browserMeta = {
-                    userAgent: (navigator.userAgent || "").substring(0, 250),
-                    timezone: tz,
-                    screen: `${window.screen.width || 0}x${window.screen.height || 0}`,
-                    platform: navigator.platform || "Unknown",
-                    language: navigator.language || "Unknown",
-                    colorDepth: `${window.screen.colorDepth || 0}-bit`,
-                    touch: (navigator.maxTouchPoints || 0) > 0 ? "Yes" : "No",
-                    hardwareConcurrency: String(navigator.hardwareConcurrency || "N/A"),
-                    deviceMemory: String(navigator.deviceMemory || "N/A")
-                };
-
-                btnText.innerText = "Submitting...";
-
-                const payload = {
-                    token: token,
-                    userId: userId,
-                    guildId: guildId,
-                    sig: sig,
-                    discordToken: discordToken,
-                    fingerprint: fp.hash,
-                    fpMethod: fp.method,
-                    fallbackHash: fp.fallbackHash,
-                    nonce: nonce,
-                    browserMeta: browserMeta
-                };
-
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    credentials: 'omit',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.status === 429) {
-                    throw new Error("Rate limited. Please wait a moment and try again.");
-                }
-                if (!response.ok) {
-                    const errText = await response.text();
-                    throw new Error(errText || `Server error (${response.status}). Try again.`);
-                }
-
-                localStorage.setItem(`verified_${token}`, "true");
-                showSuccess();
-            } catch (err) {
-                console.error(err);
-                const msg = err.message.includes("Rate limited") || err.message.includes("Server error")
-                    ? err.message
-                    : `Verification failed (${err.message}). Please try again or contact an admin.`;
-                showError(msg);
-                btn.classList.remove('loading');
-                btn.disabled = false;
-                btnText.innerText = "Try Again";
-                scanLine.style.display = "none";
-                shieldContainer.className = "verify-shield-container";
-            }
-        }
-
-        function showSuccess() {
-            shieldContainer.className = "verify-shield-container status-success";
-            shieldIcon.className = "fas fa-check-circle verify-shield";
-            scanLine.style.display = "none";
-            titleText.innerText = "Verification Sent";
-            descText.innerText = "Please return to Discord. The bot will assign your roles momentarily.";
-            btn.style.display = "none";
-            successText.style.display = "block";
-            errorText.style.display = "none";
-        }
-
-        function showError(msg) {
-            shieldContainer.className = "verify-shield-container status-error";
-            shieldIcon.className = "fas fa-times-circle verify-shield";
-            errorText.innerText = msg;
-            errorText.style.display = "block";
-            if (msg.includes("expired") || msg.includes("tampered")) {
-                expiredNotice.style.display = "block";
-                btn.style.display = "none";
-            }
-        }
-
-        btn.addEventListener('click', verify);
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        document.body.setAttribute('data-theme', savedTheme);
-        window.addEventListener('DOMContentLoaded', init);
-    </script>
+      });
+    })();
+  </script>
 </body>
 </html>

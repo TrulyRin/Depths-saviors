@@ -1,0 +1,15 @@
+{
+  "targets": {
+    "dashboard-public-pilot": {
+      "projectId": "e52b7fdb-d7ba-4818-9855-3dc895537044",
+      "activeDraftId": "11a36dca-8571-4fe7-89f7-8ed9755ed272",
+      "currentVersion": 1,
+      "contextFiles": ["dashboard.html", "dashboard.css", "style.css"],
+      "fingerprints": {
+        "dashboard.html": "CBA7673728E3141AC3DCEF59E2D06ADFDEAE565FBE3B7E04364D951ACF7B25DD",
+        "dashboard.css": "4968CE9AB070117A5211C9F83DDEA6B3702108124F8115B7585A65D1CE5AE452",
+        "style.css": "5BC38F56E165FEA9CE0F551454150E8A469852E37F2135CE8509C1F8E51B1E64"
+      }
+    }
+  }
+}
