@@ -4,13 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
-  <title>Deepsaviors Verification</title>
+  <title>Depths Saviors Verification</title>
   <style>
     body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #10131a; color: #eef3f8; font: 16px/1.5 Inter, system-ui, sans-serif; }
     main { width: min(560px, calc(100% - 48px)); padding: 32px; border: 1px solid #2f4050; border-radius: 16px; background: #17212b; text-align: center; }
-    input, button { box-sizing: border-box; width: 100%; margin-top: 14px; padding: 12px; border-radius: 8px; font: inherit; }
-    input { border: 1px solid #506477; background: #10131a; color: #eef3f8; }
-    button { border: 0; background: #66d9c4; color: #0e1b20; cursor: pointer; font-weight: 700; }
+    button { box-sizing: border-box; width: 100%; margin-top: 14px; padding: 12px; border: 0; border-radius: 8px; background: #66d9c4; color: #0e1b20; cursor: pointer; font: inherit; font-weight: 700; }
     button:disabled { opacity: .55; cursor: wait; }
     #status { min-height: 1.5em; margin-top: 16px; color: #bed0dc; }
     a { color: #66d9c4; }
@@ -18,14 +16,9 @@
 </head>
 <body>
   <main>
-    <h1>Discord-native verification</h1>
-    <p>Enter the one-time code sent to you by server staff in a Discord DM. This page does not collect browser, device, fingerprint, hardware, or network metadata.</p>
+    <h1>Server verification</h1>
     <p id="identity">Checking your Discord session…</p>
-    <form id="verify-form" hidden>
-      <label for="code">One-time code</label>
-      <input id="code" name="code" autocomplete="one-time-code" maxlength="256" required>
-      <button id="submit" type="submit">Complete verification</button>
-    </form>
+    <button id="verify" type="button" hidden>Complete verification</button>
     <p id="status" role="status"></p>
     <p><a href="/privacy">Privacy information</a></p>
   </main>
@@ -37,27 +30,39 @@
           : 'https://api.deepsaviors.xyz/api'
       );
       const apiOrigin = apiBase.replace(/\/api$/, '');
-      const guildId = new URLSearchParams(location.search).get('guild');
+      const params = new URLSearchParams(location.search);
+      const token = params.get('token');
+      const guildId = params.get('guild');
+      const userId = params.get('user');
+      const sig = params.get('sig');
       const identity = document.getElementById('identity');
-      const form = document.getElementById('verify-form');
       const status = document.getElementById('status');
-      const submit = document.getElementById('submit');
+      const verify = document.getElementById('verify');
       let csrfToken = null;
 
-      if (!/^\d{17,20}$/.test(guildId || '')) {
-        identity.textContent = 'This verification link is invalid. Ask server staff for a new code.';
+      if (!token || !/^\d{17,20}$/.test(guildId || '') || !/^\d{17,20}$/.test(userId || '') || !/^[a-f0-9]{64}$/i.test(sig || '')) {
+        identity.textContent = 'This verification link is invalid or expired. Ask a server administrator for a new one.';
         return;
+      }
+
+      function browserIdentifier() {
+        const key = 'ds_verify_browser_id';
+        let value = localStorage.getItem(key);
+        if (!value) {
+          value = crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint32Array(4)), n => n.toString(16)).join('-');
+          localStorage.setItem(key, value);
+        }
+        return value;
       }
 
       async function loadSession() {
         const response = await fetch(apiOrigin + '/auth/session', { credentials: 'include', mode: 'cors' });
-        if (!response.ok) return null;
-        return response.json();
+        return response.ok ? response.json() : null;
       }
 
       loadSession().then(session => {
         if (!session || !session.user) {
-          identity.textContent = 'Sign in with Discord before entering your code.';
+          identity.textContent = 'Sign in with Discord to verify this link.';
           const login = document.createElement('button');
           login.type = 'button';
           login.textContent = 'Sign in with Discord';
@@ -69,38 +74,26 @@
         }
         csrfToken = session.csrf_token;
         identity.textContent = 'Signed in as ' + (session.user.username || 'your Discord account') + '.';
-        form.hidden = false;
+        verify.hidden = false;
       }).catch(() => {
         identity.textContent = 'The verification service is unavailable. Contact server staff for manual review.';
       });
 
-      form.addEventListener('submit', async event => {
-        event.preventDefault();
-        const code = document.getElementById('code').value.trim();
-        if (!code) return;
-        submit.disabled = true;
-        status.textContent = 'Checking your one-time code…';
+      verify.addEventListener('click', async () => {
+        verify.disabled = true;
+        status.textContent = 'Submitting verification…';
         try {
           const response = await fetch(apiBase + '/verify', {
-            method: 'POST',
-            credentials: 'include',
-            mode: 'cors',
+            method: 'POST', credentials: 'include', mode: 'cors',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken || '' },
-            body: JSON.stringify({ guild_id: guildId, code }),
+            body: JSON.stringify({ token, guildId, userId, sig, fingerprint: browserIdentifier() }),
           });
-          const payload = await response.json();
-          const messages = {
-            verified: 'Verification complete. You may return to Discord.',
-            expired: 'That code expired. Ask staff to issue a new one.',
-            attempt_limit: 'That code is locked after five attempts. Ask staff to issue a new one.',
-            invalid: 'That code is invalid or has already been used.',
-          };
-          status.textContent = messages[payload.status] || 'Verification could not be completed. Contact staff for manual review.';
-          if (payload.status === 'verified') form.hidden = true;
-        } catch (_) {
-          status.textContent = 'The verification service is unavailable. Contact server staff for manual review.';
-        } finally {
-          submit.disabled = false;
+          if (!response.ok) throw new Error(await response.text());
+          status.textContent = 'Verification sent. You may return to Discord.';
+          verify.hidden = true;
+        } catch (error) {
+          status.textContent = error.message || 'Verification could not be completed. Contact server staff.';
+          verify.disabled = false;
         }
       });
     })();

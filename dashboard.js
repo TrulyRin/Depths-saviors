@@ -21,12 +21,6 @@ const PRIVATE_GUILD_ID = "1305511241577529354";
 // Cog metadata used client-side when bot API is unreachable
 const COG_REGISTRY = {
     gankping:         { name: "Gank Notifications",     icon: "fa-bullhorn",         scope: "global"  },
-    public_setup:     { name: "Server Setup",            icon: "fa-wand-magic-sparkles", scope: "public"  },
-    moderation:       { name: "Moderation & AutoMod",    icon: "fa-shield-halved",   scope: "public"  },
-    tickets:          { name: "Tickets",                 icon: "fa-ticket",          scope: "public"  },
-    sticky_slowmode:  { name: "Sticky & Slowmode",       icon: "fa-thumbtack",       scope: "public"  },
-    standard_antialt: { name: "Standard Anti-Alt",       icon: "fa-user-shield",     scope: "public"  },
-    local_kos:        { name: "Local KOS",               icon: "fa-crosshairs",      scope: "public"  },
     antialt:          { name: "Anti-Alt Verification",   icon: "fa-shield-halved",    scope: "private" },
     points:           { name: "Points System",           icon: "fa-chart-line",       scope: "private" },
     allies:           { name: "Ally Management",         icon: "fa-handshake",        scope: "private" },
@@ -35,7 +29,7 @@ const COG_REGISTRY = {
     botstats:         { name: "Bot Statistics",           icon: "fa-chart-bar",        scope: "private" },
     format_enforcer:  { name: "Format Enforcer",         icon: "fa-align-left",       scope: "private" },
     forum_moderator:  { name: "Forum Moderator",         icon: "fa-comments",         scope: "private" },
-    faq:              { name: "FAQ & Questions",          icon: "fa-circle-question",  scope: "global"  },
+    faq:              { name: "FAQ System",               icon: "fa-circle-question",  scope: "private" },
     deepwoken:        { name: "Build Tracker",            icon: "fa-gamepad",          scope: "private" },
     tryout:           { name: "Tryout System",            icon: "fa-clipboard-check",  scope: "private" },
     kos:              { name: "KOS System",               icon: "fa-crosshairs",       scope: "private" },
@@ -300,7 +294,7 @@ const DS = {
             isPrivate = guildId === PRIVATE_GUILD_ID;
             cogs = {};
             for (const [key, meta] of Object.entries(COG_REGISTRY)) {
-                if (meta.scope === "global" || meta.scope === "public" || isPrivate) {
+                if (meta.scope === "global" || isPrivate) {
                     cogs[key] = meta;
                 }
             }
